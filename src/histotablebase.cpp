@@ -236,7 +236,7 @@ wxString HistoTableBase::GetValue( int row, int col )
         label = wxString::FromUTF8( "" );
       else if( vTotals[ 0 ] != 0.0 )
       {
-        if( iTotal == AVGDIVMAX )
+        if( iTotal == NUM_CELLS || iTotal == AVGDIVMAX )
           label = wxString::FromUTF8( LabelConstructor::histoCellLabel( myHisto->GetHistogram(), vTotals[ iTotal ], false ).c_str());
         else
           label = wxString::FromUTF8( LabelConstructor::histoCellLabel( myHisto->GetHistogram(), vTotals[ iTotal ], true ).c_str());
