@@ -117,28 +117,6 @@ class RunAppFoldingAction: public TraceToTraceAction
 
 
 /****************************************************************************
- ********              RunSpectralAction                             ********
- ****************************************************************************/
-class RunSpectralAction: public TraceToTraceAction
-{
-  public:
-    RunSpectralAction( TraceEditSequence *whichSequence ) : TraceToTraceAction( whichSequence )
-    {}
-    ~RunSpectralAction()
-    {}
-
-    virtual std::vector<TSequenceStates> getStateDependencies() const override;
-
-    virtual bool execute( std::string whichTrace ) override;
-
-  protected:
-
-  private:
-
-};
-
-
-/****************************************************************************
  ********              RunProfetAction                             ********
  ****************************************************************************/
 class RunProfetAction: public TraceToTraceAction
@@ -214,7 +192,6 @@ class SequenceDriver
     static void sequenceCutter( gTimeline *whichTimeline );
     static void sequenceDimemas( gTimeline *whichTimeline );
     static void sequenceFolding( gTimeline *whichTimeline );
-    static void sequenceSpectral( gTimeline *whichTimeline );
     static void sequenceProfet( gTimeline *whichTimeline );
     static void sequenceUserCommand( gTimeline *whichTimeline );
 

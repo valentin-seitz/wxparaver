@@ -122,7 +122,6 @@
 #define ID_MENU_DRAWMODE_TIME_MODE                         30085
 #define ID_MENU_DRAWMODE_OBJECTS_MODE                      30086
 #define ID_MENU_DRAWMODE_BOTH_MODE                         30087
-#define ID_MENU_SPECTRAL                                   30088
 #define ID_MENU_PASTE_CONTROL_DIMENSIONS                   30089
 #define ID_MENU_PUNCTUAL                                   30090
 #define ID_MENU_PUNCTUAL_WINDOW                            30091
