@@ -618,11 +618,11 @@ void gTimeline::redraw()
   semanticColorsToValue.clear();
   semanticPixelsToValue.clear();
 
-  rgb rgbForegroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis();
+  rgb rgbForegroundColour = myWindow->getAxisColor();
   foregroundColour = wxColour( rgbForegroundColour.red,
                                rgbForegroundColour.green,
                                rgbForegroundColour.blue );
-  rgb rgbBackgroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineBackground();
+  rgb rgbBackgroundColour = myWindow->getBackgroundColor();
   backgroundColour = wxColour( rgbBackgroundColour.red,
                                rgbBackgroundColour.green,
                                rgbBackgroundColour.blue );
@@ -911,7 +911,7 @@ bool gTimeline::drawAxis( wxDC& dc, vector<TObjectOrder>& selected )
   size_t numObjects = selected.size();
   float magnify = float( myWindow->getPixelSize() );
   
-  rgb rgbAxisColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis();
+  rgb rgbAxisColour = myWindow->getAxisColor();
   wxColour axisColour = wxColour( rgbAxisColour.red, rgbAxisColour.green ,rgbAxisColour.blue );
 
   dc.SetPen( wxPen( axisColour, 1 ) );
@@ -1188,7 +1188,7 @@ void gTimeline::drawZeroAxis( wxDC& dc, vector<TObjectOrder>& selected )
   {
     rgb rgbAxisColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineZeroDashLine();
     wxColour axisColour;
-    if( rgbAxisColour == ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis() )
+    if( rgbAxisColour == myWindow->getAxisColor() )
       axisColour = wxColour( rgbAxisColour.red - 1, rgbAxisColour.green ,rgbAxisColour.blue );
     else
       axisColour = wxColour( rgbAxisColour.red, rgbAxisColour.green ,rgbAxisColour.blue );
@@ -2786,16 +2786,11 @@ void gTimeline::OnScrolledWindowMotion( wxMouseEvent& event )
   // PRV_UINT32 precision = ParaverConfig::getInstance()->getTimelinePrecision();
   PRV_UINT32 precision = 0;
 
-  rgb rgbForegroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis();
+  rgb rgbForegroundColour = myWindow->getAxisColor();
   wxColour foregroundColour = wxColour( rgbForegroundColour.red,
-                                       rgbForegroundColour.green,
-                                       rgbForegroundColour.blue );
-  
-  rgb rgbBackgroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineBackground();
-  wxColour backgroundColour = wxColour( rgbBackgroundColour.red,
-                                       rgbBackgroundColour.green,
-                                       rgbBackgroundColour.blue );
-  
+                                        rgbForegroundColour.green,
+                                        rgbForegroundColour.blue );
+
   TTime timeStep = ( myWindow->getWindowEndTime() - myWindow->getWindowBeginTime() ) /
                    ( bufferImage.GetWidth() - objectAxisPos - drawBorder );
 
