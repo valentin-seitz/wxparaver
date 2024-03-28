@@ -321,8 +321,7 @@ void gTimeline::Init()
   wheelZoomObjects = false;
 #endif
 
-  selectedItemColor = nullptr;
-  selectedCustomValue = 0;
+  selectedCustomColor = nullptr;
 
   enabledAutoRedrawIcon = false;
 }
@@ -3502,16 +3501,10 @@ void gTimeline::EnableTiming( bool state )
     drawZone->SetCursor( wxNullCursor  );
 }
 
-class CustomColorSemValue : public wxObject
-{
-  public:
-    TSemanticValue myValue;
-    wxPanel *myPanel;
-};
 
 void gTimeline::OnItemColorLeftUp( wxMouseEvent& event )
 {
-  selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
+  wxPanel *selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
   panelSelectedColor->SetBackgroundColour( selectedItemColor->GetBackgroundColour() );
   panelSelectedColor->Refresh();
   sliderSelectedRed->SetValue( selectedItemColor->GetBackgroundColour().Red() );
@@ -3521,12 +3514,12 @@ void gTimeline::OnItemColorLeftUp( wxMouseEvent& event )
   textSelectedGreen->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Green() ) );
   textSelectedBlue->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Blue() ) );
   
-  selectedCustomValue = ( (CustomColorSemValue *)event.m_callbackUserData )->myValue;
+  selectedCustomColor = static_cast<CustomColorSemValue *>( event.m_callbackUserData );
 }
 
 void gTimeline::OnTextColorLeftUp( wxMouseEvent& event )
 {
-  selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
+  wxPanel *selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
   panelSelectedColor->SetBackgroundColour( selectedItemColor->GetBackgroundColour() );
   panelSelectedColor->Refresh();
   sliderSelectedRed->SetValue( selectedItemColor->GetBackgroundColour().Red() );
@@ -3536,7 +3529,7 @@ void gTimeline::OnTextColorLeftUp( wxMouseEvent& event )
   textSelectedGreen->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Green() ) );
   textSelectedBlue->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Blue() ) );
   
-  selectedCustomValue = ( (CustomColorSemValue *)event.m_callbackUserData )->myValue;
+  selectedCustomColor = static_cast<CustomColorSemValue *>( event.m_callbackUserData );
 }
 
 /*!
@@ -3590,8 +3583,39 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
     };
 
+    auto addEventCallbacks = [ & ]( TSemanticValue whichValue, CustomColorSemValue::ColorType whichColorType )
+    {
+      CustomColorSemValue *tmpItemSemValue = new CustomColorSemValue();
+      tmpItemSemValue->myColorType = whichColorType;
+      tmpItemSemValue->myValue = whichValue;
+      tmpItemSemValue->myPanel = itemColor;
+      CustomColorSemValue *tmpTextSemValue = new CustomColorSemValue();
+      *tmpTextSemValue = *tmpItemSemValue;
+      if ( checkboxCustomPalette->IsChecked() )
+      {
+        itemColor->Connect( itemColor->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnItemColorLeftUp), tmpItemSemValue, this);
+        itemText->Connect( itemText->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnTextColorLeftUp), tmpTextSemValue, this);
+      }
+    };
+
     wxString tmpStr;
     rgb tmprgb;
+
+    if ( checkboxCustomPalette->IsChecked() )
+    {
+      tmpStr = "Background";
+      tmprgb = myWindow->getBackgroundColor();
+      addItem( tmpStr, tmprgb );
+      addEventCallbacks( 0, CustomColorSemValue::ColorType::BACKGROUND );
+      colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
+
+      tmpStr.Clear();
+      tmpStr = "Axis";
+      tmprgb = myWindow->getAxisColor();
+      addItem( tmpStr, tmprgb );
+      addEventCallbacks( 0, CustomColorSemValue::ColorType::AXIS );
+      colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
+    }
 
     if( myWindow->isFusedLinesColorSet() )
     {
@@ -3642,16 +3666,7 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
         tmprgb = myWindow->getCodeColor().calcColor( i, myWindow->getMinimumY(), myWindow->getMaximumY(), myWindow->getUseCustomPalette() );
         addItem( tmpStr, tmprgb );
 
-        CustomColorSemValue *tmpItemSemValue = new CustomColorSemValue();
-        tmpItemSemValue->myValue = i;
-        tmpItemSemValue->myPanel = itemColor;
-        CustomColorSemValue *tmpTextSemValue = new CustomColorSemValue();
-        *tmpTextSemValue = *tmpItemSemValue;
-        if ( checkboxCustomPalette->IsChecked() )
-        {
-          itemColor->Connect( itemColor->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnItemColorLeftUp), tmpItemSemValue, this);
-          itemText->Connect( itemText->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnTextColorLeftUp), tmpTextSemValue, this);
-        }
+        addEventCallbacks( i, CustomColorSemValue::ColorType::SEMANTIC_VALUE );
 
         if( i < ceil( myWindow->getMaximumY() ) )
           colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
@@ -3695,7 +3710,7 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     colorsPanel->Layout();
     colorsPanel->FitInside();
 
-    selectedItemColor = nullptr;
+    selectedCustomColor = nullptr;
     panelSelectedColor->Enable( false );
   }
   forceRedoColors = false;
@@ -6328,8 +6343,8 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   wxColor tmpColor( redColor, greenColor, blueColor );
   panelSelectedColor->SetBackgroundColour( tmpColor );
   panelSelectedColor->Refresh();
-  selectedItemColor->SetBackgroundColour( tmpColor );
-  selectedItemColor->Refresh();
+  selectedCustomColor->myPanel->SetBackgroundColour( tmpColor );
+  selectedCustomColor->myPanel->Refresh();
 
   textSelectedRed->ChangeValue( wxString::Format( wxT( "%i" ), redColor ) );
   textSelectedGreen->ChangeValue( wxString::Format( wxT( "%i" ), greenColor ) );
@@ -6339,7 +6354,12 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   tmpRGBColor.red = redColor;
   tmpRGBColor.green = greenColor;
   tmpRGBColor.blue = blueColor;
-  myWindow->getCodeColor().setCustomColor( selectedCustomValue, tmpRGBColor );
+  if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::BACKGROUND )
+    myWindow->setCustomBackgroundColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::AXIS )
+    myWindow->setCustomAxisColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::SEMANTIC_VALUE )
+    myWindow->getCodeColor().setCustomColor( selectedCustomColor->myValue, tmpRGBColor );
 
   enableApplyButton = true;
 }
@@ -6362,7 +6382,7 @@ void gTimeline::OnCheckboxCustomPaletteUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnStaticSelectedColorUpdate( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedItemColor != nullptr );
+  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedCustomColor != nullptr );
 }
 
 
@@ -6372,7 +6392,7 @@ void gTimeline::OnStaticSelectedColorUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnSliderSelectedColorUpdateUI( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedItemColor != nullptr );
+  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedCustomColor != nullptr );
 }
 
 
@@ -6383,17 +6403,18 @@ void gTimeline::OnSliderSelectedColorUpdateUI( wxUpdateUIEvent& event )
 void gTimeline::OnCheckboxCustomPaletteClick( wxCommandEvent& event )
 {
   myWindow->setUseCustomPalette( event.IsChecked() );
+
   if ( !event.IsChecked() )
   {
     enableApplyButton = false;
-    selectedItemColor = nullptr;
+    selectedCustomColor = nullptr;
     sliderSelectedRed->SetValue( 0 );
     sliderSelectedGreen->SetValue( 0 );
     sliderSelectedBlue->SetValue( 0 );
     panelSelectedColor->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
   }
 
-  if( myWindow->getCodeColor().existCustomColors() )
+  if( myWindow->existCustomColors() )
     myWindow->setForceRedraw( true );
 
   forceRedoColors = true;
@@ -6428,7 +6449,7 @@ void gTimeline::OnButtonCustomPaletteApplyUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnTextSelectedColorUpdate( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedItemColor != nullptr );
+  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedCustomColor != nullptr );
 }
 
 
@@ -6449,8 +6470,8 @@ void gTimeline::OnTextSelectedColorUpdated( wxCommandEvent& event )
   wxColor tmpColor( redColor, greenColor, blueColor );
   panelSelectedColor->SetBackgroundColour( tmpColor );
   panelSelectedColor->Refresh();
-  selectedItemColor->SetBackgroundColour( tmpColor );
-  selectedItemColor->Refresh();
+  selectedCustomColor->myPanel->SetBackgroundColour( tmpColor );
+  selectedCustomColor->myPanel->Refresh();
 
   sliderSelectedRed->SetValue( redColor );
   sliderSelectedGreen->SetValue( greenColor );
@@ -6460,7 +6481,12 @@ void gTimeline::OnTextSelectedColorUpdated( wxCommandEvent& event )
   tmpRGBColor.red = redColor;
   tmpRGBColor.green = greenColor;
   tmpRGBColor.blue = blueColor;
-  myWindow->getCodeColor().setCustomColor( selectedCustomValue, tmpRGBColor );
+  if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::BACKGROUND )
+    myWindow->setCustomBackgroundColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::AXIS )
+    myWindow->setCustomAxisColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::SEMANTIC_VALUE )
+    myWindow->getCodeColor().setCustomColor( selectedCustomColor->myValue, tmpRGBColor );
 
   enableApplyButton = true;
 }

@@ -741,6 +741,20 @@ private:
   bool zooming;
 ////@end gTimeline member variables
 
+  class CustomColorSemValue : public wxObject
+  {
+    public:
+      enum class ColorType
+      {
+        BACKGROUND,
+        AXIS,
+        SEMANTIC_VALUE
+      };
+      ColorType myColorType;
+      TSemanticValue myValue;
+      wxPanel *myPanel;
+  };
+
   // colorsPanel update info
   bool forceRedoColors;
   bool enableApplyButton;
@@ -750,8 +764,7 @@ private:
   size_t lastValuesSize;
   bool codeColorSet;
   TGradientFunction gradientFunc;
-  TSemanticValue selectedCustomValue;
-  wxPanel *selectedItemColor;
+  CustomColorSemValue* selectedCustomColor;
 
   bool enabledAutoRedrawIcon;
 
