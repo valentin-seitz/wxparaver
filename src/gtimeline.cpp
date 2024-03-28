@@ -3572,7 +3572,27 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     wxBoxSizer *itemSizer;
     wxStaticText *itemText;
     wxPanel *itemColor;
-    
+
+    auto addItem = [ & ]( const wxString& whichLabel, const rgb& whichColor )
+    {
+      itemSizer = new wxBoxSizer(wxHORIZONTAL);
+
+      itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
+      itemText->SetLabel( whichLabel );
+
+      wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
+      itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
+      itemColor->SetBackgroundColour( { whichColor.red, whichColor.green, whichColor.blue } );
+
+      itemSizer->Add( itemColor );
+      itemSizer->AddSpacer( 5 );
+      itemSizer->Add( itemText, 1, wxGROW );
+      colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
+    };
+
+    wxString tmpStr;
+    rgb tmprgb;
+
     if( myWindow->isFusedLinesColorSet() )
     {
       TObjectOrder beginRow = myWindow->getZoomSecondDimension().first;
@@ -3583,25 +3603,11 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       size_t i = 0;
       for( vector<TObjectOrder>::iterator it = selected.begin(); it != selected.end(); ++it )
       {
-        string tmpstr = LabelConstructor::objectLabel( *it, myWindow->getLevel(), myWindow->getTrace() );
+        tmpStr.Clear();
+        tmpStr = wxString::FromUTF8( LabelConstructor::objectLabel( *it, myWindow->getLevel(), myWindow->getTrace() ).c_str() );
+        tmprgb = myWindow->getCodeColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ), false );
+        addItem( tmpStr, tmprgb );
 
-        itemSizer = new wxBoxSizer(wxHORIZONTAL);
-
-        itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
-        wxString tmpStr = wxString::FromUTF8( tmpstr.c_str() );
-        itemText->SetLabel( tmpStr );
-
-        wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
-        itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-        rgb tmprgb = myWindow->getCodeColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ), false );
-        wxColour tmpColor( tmprgb.red, tmprgb.green, tmprgb.blue );
-        itemColor->SetBackgroundColour( tmpColor );
-
-        itemSizer->Add( itemColor );
-        itemSizer->AddSpacer( 5 );
-        itemSizer->Add( itemText, 1, wxGROW );
-        colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
         if( i < selected.size() - 1 )
           colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
         ++i;
@@ -3611,6 +3617,7 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     {
       int endLimit = 0;
 
+      string tmpstr;
       for( auto it = semanticValuesToColor.cbegin(); it != semanticValuesToColor.cend(); ++it )
       {
         int i = std::ceil( it->first );
@@ -3618,7 +3625,6 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
         if( lastType == EVENTTYPE_TYPE && !myWindow->getTrace()->eventLoaded( i ) )
           continue;
 
-        string tmpstr;
         if( lastType == STATE_TYPE &&
             !myWindow->getTrace()->getStateLabels().getStateLabel( i, tmpstr ) )
           continue;
@@ -3631,23 +3637,11 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
         else
           ++endLimit;
         
-        itemSizer = new wxBoxSizer(wxHORIZONTAL);
+        tmpStr.Clear();
+        tmpStr = wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, i, true, precision,false ).c_str() );
+        tmprgb = myWindow->getCodeColor().calcColor( i, myWindow->getMinimumY(), myWindow->getMaximumY(), myWindow->getUseCustomPalette() );
+        addItem( tmpStr, tmprgb );
 
-        itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
-        wxString tmpStr = wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, i, true, precision,false ).c_str() );
-        itemText->SetLabel( tmpStr );
-
-        wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
-        itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-        rgb tmprgb = myWindow->getCodeColor().calcColor( i, myWindow->getMinimumY(), myWindow->getMaximumY(), myWindow->getUseCustomPalette() );
-        wxColour tmpColor( tmprgb.red, tmprgb.green, tmprgb.blue );
-        itemColor->SetBackgroundColour( tmpColor );
-
-        itemSizer->Add( itemColor );
-        itemSizer->AddSpacer( 5 );
-        itemSizer->Add( itemText, 1, wxGROW );
-        colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
         CustomColorSemValue *tmpItemSemValue = new CustomColorSemValue();
         tmpItemSemValue->myValue = i;
         tmpItemSemValue->myPanel = itemColor;
@@ -3665,24 +3659,11 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     }
     else
     {
-      itemSizer = new wxBoxSizer(wxHORIZONTAL);
-
-      itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
-      wxString tmpStr;
+      tmpStr.Clear();
       tmpStr << wxT("< ") << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, lastMin, false, precision, false ).c_str() );
-      itemText->SetLabel( tmpStr );
+      tmprgb = myWindow->getGradientColor().calcColor( lastMin - 1, lastMin, lastMax );
+      addItem( tmpStr, tmprgb );
 
-      wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
-      itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-      rgb tmprgb = myWindow->getGradientColor().calcColor( lastMin - 1, lastMin, lastMax );
-      wxColour tmpColor( tmprgb.red, tmprgb.green, tmprgb.blue );
-      itemColor->SetBackgroundColour( tmpColor );
-
-      itemSizer->Add( itemColor );
-      itemSizer->AddSpacer( 5 );
-      itemSizer->Add( itemText, 1, wxGROW );
-      colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
       colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
 
       TSemanticValue step = ( lastMax - lastMin ) / 20.0;
@@ -3698,43 +3679,18 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
         else
           lastValueToUse = valueToUse = ( i * step ) + lastMin;
         
-        itemSizer = new wxBoxSizer(wxHORIZONTAL);
-
-        itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
         tmpStr.Clear();
         tmpStr << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, valueToUse, false, precision, false ).c_str() );
-        itemText->SetLabel( tmpStr );
-
-        tmpSize = wxSize( 20, itemText->GetSize().GetHeight() );
-        itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
         tmprgb = myWindow->getGradientColor().calcColor( valueToUse, lastMin, lastMax );
-        tmpColor = wxColour( tmprgb.red, tmprgb.green, tmprgb.blue );
-        itemColor->SetBackgroundColour( tmpColor );
+        addItem( tmpStr, tmprgb );
 
-        itemSizer->Add( itemColor );
-        itemSizer->AddSpacer( 5 );
-        itemSizer->Add( itemText );
-        colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
         colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
       }
-      itemSizer = new wxBoxSizer(wxHORIZONTAL);
 
-      itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
       tmpStr.Clear();
       tmpStr << wxT("> ") << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, lastMax, false, precision, false ).c_str() );
-      itemText->SetLabel( tmpStr );
-
-      tmpSize = wxSize( 20, itemText->GetSize().GetHeight() );
-      itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
       tmprgb = myWindow->getGradientColor().calcColor( lastMax + 1, lastMin, lastMax );
-      tmpColor = wxColour( tmprgb.red, tmprgb.green, tmprgb.blue );
-      itemColor->SetBackgroundColour( tmpColor );
-
-      itemSizer->Add( itemColor );
-      itemSizer->AddSpacer( 5 );
-      itemSizer->Add( itemText );
-      colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
+      addItem( tmpStr, tmprgb );
     }
     colorsPanel->Layout();
     colorsPanel->FitInside();
