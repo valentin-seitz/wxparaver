@@ -2242,6 +2242,7 @@ void gTimeline::OnPopUpPasteSemanticScale( wxCommandEvent& event )
 void gTimeline::OnPopUpPasteCustomPalette( wxCommandEvent& event )
 {
   gPasteWindowProperties::getInstance()->paste( this, STR_CUSTOM_PALETTE );
+  forceRedoColors = true;
   myWindow->setRedraw( true );
 }
 

@@ -354,6 +354,8 @@ void gPasteWindowProperties::paste( gTimeline* destinyTimeline, const string pro
     else if ( property == STR_CUSTOM_PALETTE )
     {
       destinyTimeline->GetMyWindow()->getCodeColor().setCustomPalette( sourceTimeline->GetMyWindow()->getCodeColor().getCustomPalette() );
+      destinyTimeline->GetMyWindow()->setCustomBackgroundColor( sourceTimeline->GetMyWindow()->getBackgroundColor() );
+      destinyTimeline->GetMyWindow()->setCustomAxisColor( sourceTimeline->GetMyWindow()->getAxisColor() );
       destinyTimeline->GetMyWindow()->setUseCustomPalette( true );
     }
     else
@@ -558,7 +560,7 @@ bool gPasteWindowProperties::isAllowed( gTimeline *destinyTimeline, const string
        property == STR_FILTER_COMMS )
     commonFilterSettings( destinyTimeline );
 
-  if( property == STR_CUSTOM_PALETTE && sourceTimeline != nullptr && !sourceTimeline->GetMyWindow()->getCodeColor().existCustomColors() )
+  if( property == STR_CUSTOM_PALETTE && sourceTimeline != nullptr && !sourceTimeline->GetMyWindow()->existCustomColors() )
     return false;
 
   commonMenuSettings();
