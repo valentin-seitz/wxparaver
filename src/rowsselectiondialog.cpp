@@ -568,32 +568,70 @@ bool RowsSelectionDialog::TransferDataFromWindow()
 wxString RowsSelectionDialog::buildRegularExpressionString( const wxString& enteredRE )
 {
   wxString parsedRE;
+  bool foundNegated = false;
+  bool closeNegatedSet = false;
+  bool keepSetOpen = false;
 
   for( size_t i = 0; i < enteredRE.Len(); ++i )
   {
+    if ( foundNegated )
+    {
+      closeNegatedSet = true;
+      foundNegated = false;
+    }
+
     switch ( (wxChar)enteredRE.GetChar( i ) )
     {
       case wxChar('.'):
         parsedRE += wxString( wxT( "[.]" ) );
         break;
+
       case wxChar('+'):
         parsedRE += wxString( wxT( "[[:alnum:]]+" ) );
         break;
+
       case wxChar('*'):
         parsedRE += wxString( wxT( "[[:alnum:]]*" ) );
         break;
+
       case wxChar('#'):
         parsedRE += wxString( wxT( "[[:digit:]]" ) );
         break;
+
       case wxChar('?'):
         parsedRE += wxString( wxT( "[[:alpha:]]" ) );
         break;
-//      case wxChar('^'): // need this?
-//        parsedRE += wxString( wxT( "^" ) );
-//        break;
+
+      case wxChar('!'):
+        parsedRE += wxString( wxT( "[^" ) );
+        foundNegated = true;
+        break;
+
+      case wxChar('['):
+        if ( keepSetOpen )
+          parsedRE += wxString( wxT( "[" ) );
+        else if ( closeNegatedSet )
+          keepSetOpen = true;
+        else
+          parsedRE += wxString( wxT( "[" ) );
+        break;
+
+      case wxChar(']'):
+        if ( keepSetOpen )
+          keepSetOpen = false;
+        else
+          parsedRE += wxString( wxT( "]" ) );
+        break;
+
       default:
         parsedRE += enteredRE.GetChar( i );
         break;
+    }
+
+    if ( closeNegatedSet && !keepSetOpen )
+    {
+      parsedRE += wxString( wxT( "]" ) );
+      closeNegatedSet = false;
     }
   }
 
@@ -687,18 +725,23 @@ wxString RowsSelectionDialog::getMyToolTip( const bool posixBasicRegExpTip )
                 "  * : 0 - n repetitions of preceeding item\n"
                 "  ^ : begin of line\n"
                 "  $ : end of line\n"
-                "  [1234] : set that matches from 1 to 4\n"
-                "  [1-3] : range that matches from 1 to 3\n\n" ) :
+                "  [1234] : matches any number in {1,2,3,4}\n"
+                "  [^ABC] : any char other than A,B,C\n"
+                "  [a-c] : range that matches any char in {a,b,c}\n"
+                "  [^1-3] : any number outside range [1-3]\n" ):
            wxT( "Quick form:\n"
                 "  . : '.' (dot character)\n"
                 "  # : only one number\n"
                 "  ? : only one character\n"
                 "  + : one or many alfanumeric\n"
                 "  * : zero or many alfanumeric\n"
+                "  ! : any char other than following one\n"
                 "  ^ : begin of line\n"
                 "  $ : end of line\n"
-                "  [1234] : set that matches from 1 to 4\n"
-                "  [1-3] : range that matches from 1 to 3\n\n" ) );
+                "  [1234] : matches any number in {1,2,3,4}\n"
+                "  ![ABC] : any char other than A,B,C\n"
+                "  [a-c] : range that matches any char in {a,b,c}\n"
+                "  ![1-3] : any number outside range [1-3]\n\n" ) );
 }
 
 
@@ -723,6 +766,7 @@ void RowsSelectionDialog::OnRegularExpressionApply( wxCommandEvent& event )
     // It is Quick Form; we must adapt it. 
     parsedRE = buildRegularExpressionString( parsedRE );
   }
+  // std::cout << parsedRE << std::endl;
 
   // Build regular expression
   wxRegEx *levelRE = new wxRegEx();
