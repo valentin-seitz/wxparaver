@@ -977,8 +977,11 @@ void updateTimelinePropertiesRecursive( wxPropertyGrid* windowProperties, Timeli
 
     if( !whichWindow->getTrace()->existResourceInfo() )
     {
-      tmpIntraCommId->Enable( false );
-      tmpInterCommId->Enable( false );
+      if ( tmpIntraCommId != (wxPGId)nullptr )
+        tmpIntraCommId->Enable( false );
+
+      if ( tmpInterCommId != (wxPGId)nullptr )
+        tmpInterCommId->Enable( false );
     }
 
     // Comm From
