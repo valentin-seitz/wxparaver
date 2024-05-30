@@ -28,7 +28,7 @@
 /*!
  * Includes
  */
- #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <wx/progdlg.h>
 #include "prvtypes.h"
@@ -625,7 +625,6 @@ public:
   void OnPopUpTiming( wxCommandEvent& event );
   void EnableTiming( bool state );
   void OnItemColorLeftUp( wxMouseEvent& event );
-  void OnTextColorLeftUp( wxMouseEvent& event );
 
   void saveImage( wxString whichFileName = _( "" ), TImageFormat filterIndex =  TImageFormat::PNG );
   void saveImageLegend( wxString whichFileName = _( "" ),
@@ -750,9 +749,12 @@ private:
         AXIS,
         SEMANTIC_VALUE
       };
+
       ColorType myColorType;
       TSemanticValue myValue;
       wxPanel *myPanel;
+      wxStaticText *myText;
+      wxFont originalFont;
   };
 
   // colorsPanel update info
@@ -765,6 +767,12 @@ private:
   bool codeColorSet;
   TGradientFunction gradientFunc;
   CustomColorSemValue* selectedCustomColor;
+  wxStaticText *lastSelectedItemText = nullptr;
+  wxFont originalUnselectectItemTextFont;
+  wxCheckBox *backgroundAsZeroCheck = nullptr;
+  bool lastBackgroundAsZero = false;
+  wxPanel *backgroundColorPanel = nullptr;
+  wxPanel *zeroColorPanel = nullptr;
 
   bool enabledAutoRedrawIcon;
 
