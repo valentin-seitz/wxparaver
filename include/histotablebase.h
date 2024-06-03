@@ -67,4 +67,5 @@ class HistoTableBase : public wxGridTableBase
 
     int getNumSemanticColumns() const;
     const wxColour *getTextColorFromLuminance( rgb fromColour ) const;
+    int getIndexTotal( int kernelRow, int kernelCol ) const;
 };

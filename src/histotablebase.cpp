@@ -164,6 +164,20 @@ wxString HistoTableBase::GetColLabelValue( int col )
 }
 
 
+int HistoTableBase::getIndexTotal( int kernelRow, int kernelCol ) const
+{
+  int iTotal = -1;
+  if( myHisto->GetHistogram()->getOnlyTotals() )
+    iTotal = myHisto->GetHistogram()->getHorizontal() ? kernelRow : kernelCol;
+  else if( myHisto->GetHistogram()->getHorizontal() && kernelRow >= myHisto->GetHistogram()->getNumRows() )
+    iTotal = kernelRow - myHisto->GetHistogram()->getNumRows() - 1;
+  else
+    iTotal = kernelCol - getNumSemanticColumns() - 1;
+
+  return iTotal;
+}
+
+
 wxString HistoTableBase::GetValue( int row, int col )
 {
   int drawCol = col;
@@ -205,13 +219,7 @@ wxString HistoTableBase::GetValue( int row, int col )
       ( !myHisto->GetHistogram()->getHorizontal() && col >= tmpNumColumns ) ||
       myHisto->GetHistogram()->getOnlyTotals() )
   {
-    int iTotal;
-    if( myHisto->GetHistogram()->getOnlyTotals() )
-      iTotal = myHisto->GetHistogram()->getHorizontal() ? row : col;
-    else if( myHisto->GetHistogram()->getHorizontal() && row >= myHisto->GetHistogram()->getNumRows() )
-      iTotal = row - myHisto->GetHistogram()->getNumRows() - 1;
-    else
-      iTotal = col - tmpNumColumns - 1;
+    int iTotal = getIndexTotal( row, col );
 
     if( iTotal == -1 )
       label = wxString::FromUTF8( "" );
@@ -304,6 +312,22 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
 
   int tmpNumColumns = getNumSemanticColumns();
 
+  PRV_UINT16 idStat;
+  if( !myHisto->GetHistogram()->getIdStat( myHisto->GetHistogram()->getCurrentStat(), idStat ) )
+    throw( std::exception() );
+
+  auto boldNumCellsTotal = [ & ]()
+  {
+    int iTotal = getIndexTotal( row, col );
+    if( iTotal == 0 )
+    {
+      HistogramTotals *totals = myHisto->GetHistogram()->getTotals( myHisto->GetHistogram()->getCurrentStat() );
+      TSemanticValue numCells = totals->getNumCells( idStat, myHisto->GetHistogram()->getHorizontal() ? col : row, myHisto->GetHistogram()->getSelectedPlane() );
+      if( numCells == ( myHisto->GetHistogram()->getHorizontal() ? myHisto->GetHistogram()->getNumRows() : myHisto->GetHistogram()->getNumColumns() ) )
+        tmpAttr->SetFont( cellFontBold );
+    }
+  };
+
   if( myHisto->GetHistogram()->getHorizontal() &&
       myHisto->GetHistogram()->getFirstRowColored() &&
       !myHisto->GetHistogram()->isCommunicationStat( myHisto->GetHistogram()->getCurrentStat() ) )
@@ -331,16 +355,10 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
         
       return tmpAttr;
     }
-    else if( myHisto->GetHistogram()->getOnlyTotals() )
-      return tmpAttr;
 
     --row;
   }
-  else if( myHisto->GetHistogram()->getOnlyTotals() )
-  {
-    return tmpAttr;
-  }
-  else if( !myHisto->GetHistogram()->getHorizontal() && myHisto->GetHistogram()->getFirstRowColored() )
+  else if( !myHisto->GetHistogram()->getHorizontal() && myHisto->GetHistogram()->getFirstRowColored() && !myHisto->GetHistogram()->getOnlyTotals() )
   {
     if( col == 0 )
     {
@@ -371,18 +389,17 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
   }
 
   if( !myHisto->GetHistogram()->getHorizontal() )
-  {
-    int tmp = row;
-    row = col;
-    col = tmp;
-  }
+    std::swap( row, col );
 
-  PRV_UINT16 idStat;
-  if( !myHisto->GetHistogram()->getIdStat( myHisto->GetHistogram()->getCurrentStat(), idStat ) )
-    throw( std::exception() );
+  if( myHisto->GetHistogram()->getOnlyTotals() )
+  {
+    boldNumCellsTotal();
+    return tmpAttr;
+  }
 
   TSemanticValue semValue;
 
+  // Regular cell
   if( ( myHisto->GetHistogram()->getHorizontal() && row < myHisto->GetHistogram()->getNumRows() ) ||
       ( !myHisto->GetHistogram()->getHorizontal() && col < tmpNumColumns ) )
   {
@@ -428,6 +445,11 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
       }
     }
   }
+  else // Totals cell
+  {
+    boldNumCellsTotal();
+  }
+
   return tmpAttr;
 }
 
