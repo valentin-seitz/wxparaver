@@ -770,7 +770,7 @@ void RowsSelectionDialog::OnRegularExpressionApply( wxCommandEvent& event )
 
   // Build regular expression
   wxRegEx *levelRE = new wxRegEx();
-  if ( levelRE->Compile( parsedRE ) )
+  if ( levelRE->Compile( parsedRE, wxRE_ADVANCED ) )
   {
     // Any match?
     int matches = countMatches( iTab, levelRE );
