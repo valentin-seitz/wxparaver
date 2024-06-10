@@ -3624,7 +3624,10 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
 
       tmpStr.Clear();
-      tmpStr = "Axis";
+      if( myWindow->isFunctionLineColorSet() )
+        tmpStr = "Axis + Line";
+      else
+        tmpStr = "Axis";
       tmprgb = myWindow->getAxisColor();
       addItem( tmpStr, tmprgb );
       addEventCallbacks( 0, CustomColorSemValue::ColorType::AXIS );
