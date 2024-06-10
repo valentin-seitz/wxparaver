@@ -2137,6 +2137,7 @@ void gTimeline::OnPopUpFusedLinesColor( wxCommandEvent& event )
 
 void gTimeline::OnPopUpPunctualColor( wxCommandEvent& event )
 {
+  forceRedoColors = true;
   myWindow->setPunctualColorMode();
   myWindow->setRedraw( true );
 }
@@ -2180,6 +2181,7 @@ void gTimeline::OnPopUpPunctualColorWindow( wxCommandEvent& event )
 
 void gTimeline::OnPopUpCodeColor( wxCommandEvent& event )
 {
+  forceRedoColors = true;
   myWindow->setCodeColorMode();
   myWindow->setRedraw( true );
 }
@@ -2323,18 +2325,21 @@ void gTimeline::OnPopUpRowSelection( wxCommandEvent& event )
 
 void gTimeline::OnPopUpGradientColor( wxCommandEvent& event )
 {
+  forceRedoColors = true;
   myWindow->setGradientColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::OnPopUpNotNullGradientColor( wxCommandEvent& event )
 {
+  forceRedoColors = true;
   myWindow->setNotNullGradientColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::OnPopUpAlternativeGradientColor( wxCommandEvent& event )
 {
+  forceRedoColors = true;
   myWindow->setAlternativeGradientColorMode();
   myWindow->setRedraw( true );
 }
@@ -3674,7 +3679,7 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
           colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
       }
     }
-    else
+    else if( myWindow->isGradientColorSet() || myWindow->isNotNullGradientColorSet() || myWindow->isAlternativeGradientColorSet() )
     {
       tmpStr.Clear();
       tmpStr << wxT("< ") << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, lastMin, false, precision, false ).c_str() );
@@ -3772,12 +3777,14 @@ void gTimeline::drawEventFlags( bool draw )
 
 void gTimeline::drawFunctionLineColor()
 {
+  forceRedoColors = true;
   myWindow->setFunctionLineColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::drawFusedLinesColor()
 {
+  forceRedoColors = true;
   myWindow->setFusedLinesColorMode();
   myWindow->setRedraw( true );
 }
