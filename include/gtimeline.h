@@ -281,6 +281,8 @@ public:
   void MousePanMotion();
   void MousePanLeftUp( wxMouseEvent& event );
   
+  void OnBackgroundAsZeroCheckClick( wxCommandEvent& event );
+
 ////@begin gTimeline member function declarations
 
   wxColour GetBackgroundColour() const { return backgroundColour ; }
@@ -769,7 +771,6 @@ private:
   CustomColorSemValue* selectedCustomColor;
   wxStaticText *lastSelectedItemText = nullptr;
   wxFont originalUnselectectItemTextFont;
-  wxCheckBox *backgroundAsZeroCheck = nullptr;
   bool lastBackgroundAsZero = false;
   wxPanel *backgroundColorPanel = nullptr;
   wxPanel *zeroColorPanel = nullptr;
