@@ -2023,21 +2023,26 @@ void CutFilterDialog::OnButtonScKeepEventsDeleteClick( wxCommandEvent& event )
 }
 
 
-bool CutFilterDialog::SetSoftwareCountersEventsListToString( string listEvents, wxListBox *selectedEvents )
+void CutFilterDialog::SetSoftwareCountersEventsListToString( std::function<char *()> whichFunction, wxListBox *selectedEvents )
 {
   selectedEvents->Clear();
-  stringstream auxList( listEvents );
-  while( !auxList.eof() )
+
+  char *tmpStrLine = whichFunction();
+  if ( tmpStrLine != nullptr )
   {
-    string tmpStr;
+    std::string listEvents( tmpStrLine );
+    stringstream auxList( listEvents );
+    while( !auxList.eof() )
+    {
+      string tmpStr;
 
-    std::getline( auxList, tmpStr, ';' );
-    selectedEvents->Append( wxString( tmpStr.c_str(), wxConvUTF8 ).Trim(true).Trim(false) );
+      std::getline( auxList, tmpStr, ';' );
+      selectedEvents->Append( wxString( tmpStr.c_str(), wxConvUTF8 ).Trim(true).Trim(false) );
+    }
+
+    free( tmpStrLine );
   }
-
-  return true;
 }
-
 
 
 char *CutFilterDialog::GetSoftwareCountersEventsListToString( wxListBox *selectedEvents )
@@ -2171,9 +2176,8 @@ void CutFilterDialog::TransferSoftwareCountersDataToWindow( TraceOptions *traceO
   textSCMinimumBurstTime->SetValue( wxString::FromUTF8( aux.str().c_str() ) );
 
   // Selected events
-  bool done = SetSoftwareCountersEventsListToString( string( traceOptions->get_sc_accum_types() ),
-                                                     listSCAccumEvents );
-  done = SetSoftwareCountersEventsListToString( string( traceOptions->get_sc_count_types() ), listSCCountEvents );
+  SetSoftwareCountersEventsListToString( [&traceOptions](){ return traceOptions->get_sc_accum_types(); }, listSCAccumEvents );
+  SetSoftwareCountersEventsListToString( [&traceOptions](){ return traceOptions->get_sc_count_types(); }, listSCCountEvents );
 
   // Options
   checkSCRemoveStates->SetValue( traceOptions->get_sc_remove_states() );
@@ -2182,8 +2186,7 @@ void CutFilterDialog::TransferSoftwareCountersDataToWindow( TraceOptions *traceO
   checkSCOnlyInBurstsCounting->SetValue( traceOptions->get_sc_only_in_bursts() );
 
   // Keep events
-  done = SetSoftwareCountersEventsListToString( string( traceOptions->get_sc_types_kept() ),
-                                                listSCKeepEvents );
+  SetSoftwareCountersEventsListToString( [&traceOptions](){ return traceOptions->get_sc_types_kept(); }, listSCKeepEvents );
 
   // Experimental feature?
   // traceOptions->set_sc_frequency( (int) scFrequency );

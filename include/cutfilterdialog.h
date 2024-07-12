@@ -354,7 +354,7 @@ public:
   void CheckStatesList( TraceOptions::TStateNames statesList );
 
 
-  bool SetSoftwareCountersEventsListToString( std::string listEvents, wxListBox *selectedEvents );
+  void SetSoftwareCountersEventsListToString( std::function<char *()> whichFunction, wxListBox *selectedEvents );
   char *GetSoftwareCountersEventsListToString( wxListBox *selectedEvents );
 
   void TransferWindowToCommonData( bool previousWarning );
