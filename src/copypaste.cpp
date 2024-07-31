@@ -356,6 +356,7 @@ void gPasteWindowProperties::paste( gTimeline* destinyTimeline, const string pro
       destinyTimeline->GetMyWindow()->getCodeColor().setCustomPalette( sourceTimeline->GetMyWindow()->getCodeColor().getCustomPalette() );
       destinyTimeline->GetMyWindow()->setCustomBackgroundColor( sourceTimeline->GetMyWindow()->getBackgroundColor() );
       destinyTimeline->GetMyWindow()->setCustomAxisColor( sourceTimeline->GetMyWindow()->getAxisColor() );
+      destinyTimeline->GetMyWindow()->setBackgroundAsZero( sourceTimeline->GetMyWindow()->getBackgroundAsZero() );
       destinyTimeline->GetMyWindow()->setUseCustomPalette( true );
     }
     else

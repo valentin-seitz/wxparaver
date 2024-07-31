@@ -3617,7 +3617,7 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       wxBoxSizer *itemSizer = addItem( tmpStr, tmprgb );
       backgroundColorPanel = itemColor;
       wxCheckBox *backgroundAsZeroCheck = new wxCheckBox( colorsPanel, wxID_ANY, "As zero" );
-      backgroundAsZeroCheck->SetValue( lastBackgroundAsZero );
+      backgroundAsZeroCheck->SetValue( myWindow->getBackgroundAsZero() );
       backgroundAsZeroCheck->Connect( backgroundAsZeroCheck->GetId(), wxEVT_CHECKBOX, wxCommandEventHandler(gTimeline::OnBackgroundAsZeroCheckClick), nullptr, this );
       itemSizer->Add( backgroundAsZeroCheck );
       addEventCallbacks( 0, CustomColorSemValue::ColorType::BACKGROUND );
@@ -6369,7 +6369,7 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::BACKGROUND )
   {
     myWindow->setCustomBackgroundColor( tmpRGBColor );
-    if( lastBackgroundAsZero )
+    if( myWindow->getBackgroundAsZero() )
     {
       myWindow->getCodeColor().setCustomColor( 0, tmpRGBColor );
       if( zeroColorPanel )
@@ -6384,7 +6384,7 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::SEMANTIC_VALUE )
   {
     myWindow->getCodeColor().setCustomColor( selectedCustomColor->myValue, tmpRGBColor );
-    if( lastBackgroundAsZero && selectedCustomColor->myValue == 0.0 )
+    if( myWindow->getBackgroundAsZero() && selectedCustomColor->myValue == 0.0 )
     {
       myWindow->setCustomBackgroundColor( tmpRGBColor );
       if( backgroundColorPanel )
@@ -6536,5 +6536,5 @@ void gTimeline::OnCheckWWShowDateUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnBackgroundAsZeroCheckClick( wxCommandEvent& event )
 {
-  lastBackgroundAsZero = event.IsChecked();
+  myWindow->setBackgroundAsZero( event.IsChecked() );
 }

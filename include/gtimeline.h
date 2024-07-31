@@ -771,7 +771,6 @@ private:
   CustomColorSemValue* selectedCustomColor;
   wxStaticText *lastSelectedItemText = nullptr;
   wxFont originalUnselectectItemTextFont;
-  bool lastBackgroundAsZero = false;
   wxPanel *backgroundColorPanel = nullptr;
   wxPanel *zeroColorPanel = nullptr;
 
