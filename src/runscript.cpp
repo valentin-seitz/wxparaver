@@ -397,7 +397,7 @@ void RunScript::Init()
   application[ TExternalApp::USER_COMMAND ]          = wxString( wxT("") ); // NOT USED
   application[ TExternalApp::DIMEMAS_GUI ]           = wxString( wxT("DimemasGUI") );
   application[ TExternalApp::PRVSTATS ]              = wxString( wxT("prvstats") );
-  application[ TExternalApp::PROFET ]                = wxString( wxT("profet") );
+  application[ TExternalApp::PROFET ]                = wxString( wxT("profet-prv") );
 
   tagFoldingOutputDirectory = wxString( wxT("Output directory:") );
 
@@ -2922,7 +2922,6 @@ void RunScript::OnProfetAdditionalPlotsUpdate( wxUpdateUIEvent& event )
     lastProcessedTrace = textCtrlTrace->GetValue();
     wxFileName filename( lastProcessedTrace );
     filename.SetExt( "pcf" );
-    std::cout<<filename.GetFullPath()<<std::endl;
     PCFFileParser<> pcfFile( std::string( filename.GetFullPath().c_str() ) );
     std::set< std::string > cpuLabels;
 
