@@ -3199,12 +3199,11 @@ void gHistogram::saveImage( wxString whichFileName, TImageFormat filterIndex )
   wxFont titleFont = wxFont( 8, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD );
 
   // Get dimensions
-  wxImage img = drawImage.ConvertToImage();
-
   int imageWidth = 0;
   int imageHeight = 0;
   if ( GetHistogram()->getZoom() )
   {
+    wxImage img = drawImage.ConvertToImage();
     imageWidth = img.GetWidth();
     imageHeight = img.GetHeight();
   }
