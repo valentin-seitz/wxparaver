@@ -353,7 +353,7 @@ void gPasteWindowProperties::paste( gTimeline* destinyTimeline, const string pro
     }
     else if ( property == STR_CUSTOM_PALETTE )
     {
-      destinyTimeline->GetMyWindow()->getCodeColor().setCustomPalette( sourceTimeline->GetMyWindow()->getCodeColor().getCustomPalette() );
+      destinyTimeline->GetMyWindow()->getSemanticColor().setCustomPalette( sourceTimeline->GetMyWindow()->getSemanticColor().getCustomPalette() );
       destinyTimeline->GetMyWindow()->setCustomBackgroundColor( sourceTimeline->GetMyWindow()->getBackgroundColor() );
       destinyTimeline->GetMyWindow()->setCustomAxisColor( sourceTimeline->GetMyWindow()->getAxisColor() );
       destinyTimeline->GetMyWindow()->setBackgroundAsZero( sourceTimeline->GetMyWindow()->getBackgroundAsZero() );
