@@ -3709,6 +3709,12 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
         tmprgb = myWindow->getSemanticColor().calcColor( valueToUse, lastMin, lastMax );
         addItem( tmpStr, tmprgb );
 
+        if( myWindow->isNotNullGradientColorSet() && valueToUse == 0.0 )
+        {
+          zeroColorPanel = itemColor;
+          addEventCallbacks( valueToUse, CustomColorSemValue::ColorType::SEMANTIC_VALUE );
+        }
+
         colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
       }
 
