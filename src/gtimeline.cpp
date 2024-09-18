@@ -3644,6 +3644,9 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       size_t i = 0;
       for( vector<TObjectOrder>::iterator it = selected.begin(); it != selected.end(); ++it )
       {
+        if( i > MAX_LEGEND_COLORS )
+          break;
+
         tmpStr.Clear();
         tmpStr = wxString::FromUTF8( LabelConstructor::objectLabel( *it, myWindow->getLevel(), myWindow->getTrace() ).c_str() );
         tmprgb = myWindow->getSemanticColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ) );
