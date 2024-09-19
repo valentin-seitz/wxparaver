@@ -1246,7 +1246,7 @@ void gTimeline::drawRow( wxDC& dc,
   float magnify  = float( myWindow->getPixelSize() );
   if( myWindow->isPunctualColorSet() )
   {
-    rgb rgbPunctualColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelinePunctual();
+    rgb rgbPunctualColour = myWindow->getPunctualColor();
     wxColour punctualColor( rgbPunctualColour.red,
                             rgbPunctualColour.green,
                             rgbPunctualColour.blue );
@@ -3634,7 +3634,15 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
     }
 
-    if( myWindow->isFusedLinesColorSet() )
+    if( myWindow->isPunctualColorSet() && checkboxCustomPalette->IsChecked() )
+    {
+      tmpStr.Clear();
+      tmpStr = "Punctual";
+      tmprgb = myWindow->getPunctualColor();
+      addItem( tmpStr, tmprgb );
+      addEventCallbacks( 0, CustomColorSemValue::ColorType::PUNCTUAL );
+    }
+    else if( myWindow->isFusedLinesColorSet() )
     {
       TObjectOrder beginRow = myWindow->getZoomSecondDimension().first;
       TObjectOrder endRow = myWindow->getZoomSecondDimension().second;
@@ -6390,6 +6398,8 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   }
   else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::AXIS )
     myWindow->setCustomAxisColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::PUNCTUAL )
+    myWindow->setCustomPunctualColor( tmpRGBColor );
   else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::SEMANTIC_VALUE )
   {
     myWindow->getSemanticColor().setCustomColor( selectedCustomColor->myValue, tmpRGBColor );

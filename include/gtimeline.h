@@ -749,6 +749,7 @@ private:
       {
         BACKGROUND,
         AXIS,
+        PUNCTUAL,
         SEMANTIC_VALUE
       };
 
