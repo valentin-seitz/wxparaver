@@ -3671,9 +3671,11 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       int endLimit = 0;
 
       string tmpstr;
-      auto lastIt = semanticValuesToColor.cend();
+      auto it = semanticValuesToColor.lower_bound( myWindow->getMinimumY() );
+      auto endIt = semanticValuesToColor.upper_bound( myWindow->getMaximumY() );
+      auto lastIt = endIt;
       if( !semanticValuesToColor.empty() ) --lastIt;
-      for( auto it = semanticValuesToColor.cbegin(); it != semanticValuesToColor.cend(); ++it )
+      for( ; it != endIt; ++it )
       {
         if( endLimit > MAX_LEGEND_COLORS )
           break;
