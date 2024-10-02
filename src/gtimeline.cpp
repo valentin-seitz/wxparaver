@@ -1260,8 +1260,10 @@ void gTimeline::drawRow( wxDC& dc,
   else
     objectPos = objectPosList[ firstRow ];
   wxCoord timePos   = objectAxisPos + 1;
-  int lineLastPos   = 0;
+  wxCoord timeLastPos = timePos;
+  int semanticLastPos = 0;
 
+  auto itLast = --valuesToDraw.end();
   for( typename vector< ValuesType >::iterator it = valuesToDraw.begin(); it != valuesToDraw.end(); ++it )
   {
     if( myWindow->isPunctualColorSet() )
@@ -1277,11 +1279,11 @@ void gTimeline::drawRow( wxDC& dc,
     }
     else if( myWindow->isFunctionLineColorSet() )
     {
-      drawRowFunction( dc, *it, lineLastPos, objectPos, timePos, magnify );
+      drawRowFunction( dc, *it, semanticLastPos, objectPos, timePos, magnify );
     }
     else if( myWindow->isFusedLinesColorSet() )
     {
-      drawRowFusedLines( dc, *it, lineLastPos, firstRow, timePos, magnify );
+      drawRowFusedLines( dc, *it, semanticLastPos, timeLastPos, firstRow, timePos, it == itLast );
     }
 
     timePos += (int) magnify ;
@@ -1333,14 +1335,14 @@ void gTimeline::drawRowColor( wxDC& dc, TSemanticValue valueToDraw, wxCoord obje
 
 
 template<typename ValuesType>
-void gTimeline::drawRowFunction( wxDC& dc, ValuesType valueToDraw, int& lineLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
+void gTimeline::drawRowFunction( wxDC& dc, ValuesType valueToDraw, int& semanticLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
 {
   // Default implementation should not be called; only intended for compiling
   abort();
 }
 
 template<>
-void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& lineLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
+void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& semanticLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
 {
   TSemanticValue realMin = myWindow->getMinimumY();
   
@@ -1361,10 +1363,10 @@ void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& line
   semanticPixelsToValue[ currentPos ].insert( valueToDraw );
 
   dc.SetPen( foregroundColour );
-  if( currentPos != lineLastPos )
+  if( currentPos != semanticLastPos )
   {
-    int from = ( currentPos > lineLastPos ) ? currentPos : lineLastPos;
-    int to   = ( currentPos < lineLastPos ) ? currentPos : lineLastPos;
+    int from = ( currentPos > semanticLastPos ) ? currentPos : semanticLastPos;
+    int to   = ( currentPos < semanticLastPos ) ? currentPos : semanticLastPos;
     dc.DrawLine( timePos, objectPos + objectHeight - from,
                  timePos, objectPos + objectHeight - to + 1 );
     if( magnify > 1.0 )
@@ -1380,19 +1382,19 @@ void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& line
                    timePos + magnify, objectPos + objectHeight - currentPos ); 
   }
 
-  lineLastPos = currentPos;
+  semanticLastPos = currentPos;
 }
 
 
 template<typename ValuesType>
-void gTimeline::drawRowFusedLines( wxDC& dc, ValuesType valueToDraw, int& lineLastPos, TObjectOrder whichObject, wxCoord timePos, float magnify )
+void gTimeline::drawRowFusedLines( wxDC& dc, ValuesType valueToDraw, int& semanticLastPos, wxCoord& timeLastPos, TObjectOrder whichObject, wxCoord timePos, bool isLastValue )
 {
   // Default implementation should not be called; only intended for compiling
   abort();
 }
 
 template<>
-void gTimeline::drawRowFusedLines( wxDC& dc, TSemanticValue valueToDraw, int& lineLastPos, TObjectOrder whichObject, wxCoord timePos, float magnify )
+void gTimeline::drawRowFusedLines( wxDC& dc, TSemanticValue valueToDraw, int& semanticLastPos, wxCoord& timeLastPos, TObjectOrder whichObject, wxCoord timePos, bool isLastValue )
 {
   TSemanticValue realMin = myWindow->getMinimumY();
   
@@ -1408,29 +1410,36 @@ void gTimeline::drawRowFusedLines( wxDC& dc, TSemanticValue valueToDraw, int& li
                   / ( myWindow->getMaximumY() - realMin );
   int currentPos = ( timeAxisPos - drawBorder ) * tmpPos;
 
+  // First value. It's no needed to draw a vertical line from 0.
+  if( timePos == objectAxisPos + 1 )
+    semanticLastPos = currentPos;
+
   rgb colorToDraw = myWindow->getSemanticColor().calcColor( whichObject + 1, 0, whichObject + 1 );
   semanticColorsToValue[ colorToDraw ].insert( whichObject );
   dc.SetPen( wxPen( wxColour( colorToDraw.red, colorToDraw.green, colorToDraw.blue ) ) );
-  if( currentPos != lineLastPos )
+
+  auto drawLastHorizontalValue = [&]( wxCoord timeEndPos )
+    {
+      dc.DrawLine( timeLastPos, timeAxisPos - semanticLastPos,
+                   timeEndPos,  timeAxisPos - semanticLastPos );
+      timeLastPos = timePos;
+    };
+
+  if( currentPos != semanticLastPos )
   {
-    int from = ( currentPos > lineLastPos ) ? currentPos : lineLastPos;
-    int to   = ( currentPos < lineLastPos ) ? currentPos : lineLastPos;
+    drawLastHorizontalValue( timePos );
+
+    int from = ( currentPos > semanticLastPos ) ? currentPos : semanticLastPos;
+    int to   = ( currentPos < semanticLastPos ) ? currentPos : semanticLastPos;
     dc.DrawLine( timePos, timeAxisPos - from,
-                 timePos, timeAxisPos - to + 1 );
-    if( magnify > 1.0 )
-      dc.DrawLine( timePos,           timeAxisPos - currentPos,
-                   timePos + magnify, timeAxisPos - currentPos ); 
+                 timePos, timeAxisPos - to );
   }
-  else
+  else if( isLastValue )
   {
-    if ( magnify == 1.0 )
-      dc.DrawPoint( timePos, timeAxisPos - currentPos );
-    else
-      dc.DrawLine( timePos,           timeAxisPos - currentPos,
-                   timePos + magnify, timeAxisPos - currentPos ); 
+    drawLastHorizontalValue( dc.GetSize().GetWidth() - drawBorder );
   }
 
-  lineLastPos = currentPos;
+  semanticLastPos = currentPos;
 }
 
 
