@@ -381,8 +381,8 @@ public:
   wxPen GetPhysicalPen() const { return physicalPen ; }
   void SetPhysicalPen(wxPen value) { physicalPen = value ; }
 
-  bool GetRedoColors() const { return redoColors ; }
-  void SetRedoColors(bool value) { redoColors = value ; }
+  bool GetRedoColors() const { return redoColorsPanel ; }
+  void SetRedoColors(bool value) { redoColorsPanel = value ; }
 
   wxStopWatch * GetRedrawStopWatch() const { return redrawStopWatch ; }
   void SetRedrawStopWatch(wxStopWatch * value) { redrawStopWatch = value ; }
@@ -716,7 +716,7 @@ private:
   int objectHeight;
   std::vector<PRV_INT32> objectPosList;
   wxPen physicalPen;
-  bool redoColors;
+  bool redoColorsPanel;
   wxStopWatch * redrawStopWatch;
   std::map< rgb, std::set<TSemanticValue> > semanticColorsToValue;
   wxFont semanticFont;
@@ -761,7 +761,7 @@ private:
   };
 
   // colorsPanel update info
-  bool forceRedoColors;
+  bool forceRedoColorsPanel;
   bool enableApplyButton;
   SemanticInfoType lastType;
   TSemanticValue lastMin;

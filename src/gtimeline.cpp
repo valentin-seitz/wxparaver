@@ -240,7 +240,7 @@ void gTimeline::Init()
   lastSemanticFoundTime = 0;
   myWindow = nullptr;
   objectHeight = 1;
-  redoColors = false;
+  redoColorsPanel = false;
   redrawStopWatch = new wxStopWatch();
   splitChanged = false;
   timerMotion = new wxTimer( this, ID_TIMER_MOTION );
@@ -308,7 +308,7 @@ void gTimeline::Init()
   whatWhereRow = 0;
   whatWhereSemantic = 0.0;
 
-  forceRedoColors = false;
+  forceRedoColorsPanel = false;
   enableApplyButton = false;
   lastType = NO_TYPE;
   lastMin = 0;
@@ -609,7 +609,7 @@ void gTimeline::redraw()
   }
 #endif
   myWindow->setReady( false );
-  redoColors = true;
+  redoColorsPanel = true;
   enableApplyButton = false;
   enabledAutoRedrawIcon = false;
 
@@ -2048,6 +2048,7 @@ gTimeline *gTimeline::clone( Timeline *clonedWindow,
   clonedTimeline->SetSemanticValuesToColor( semanticValuesToColor );
   clonedTimeline->SetSemanticColorsToValue( semanticColorsToValue );
   clonedTimeline->SetSemanticPixelsToValue( semanticPixelsToValue );
+  clonedTimeline->redoColorsPanel = true;
 
   clonedTimeline->myWindow->setReady( myWindow->getReady() );
   if( mustRedraw )
@@ -2146,7 +2147,7 @@ void gTimeline::OnPopUpFusedLinesColor( wxCommandEvent& event )
 
 void gTimeline::OnPopUpPunctualColor( wxCommandEvent& event )
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setPunctualColorMode();
   myWindow->setRedraw( true );
 }
@@ -2190,7 +2191,7 @@ void gTimeline::OnPopUpPunctualColorWindow( wxCommandEvent& event )
 
 void gTimeline::OnPopUpCodeColor( wxCommandEvent& event )
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setCodeColorMode();
   myWindow->setRedraw( true );
 }
@@ -2253,7 +2254,7 @@ void gTimeline::OnPopUpPasteSemanticScale( wxCommandEvent& event )
 void gTimeline::OnPopUpPasteCustomPalette( wxCommandEvent& event )
 {
   gPasteWindowProperties::getInstance()->paste( this, STR_CUSTOM_PALETTE );
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setRedraw( true );
 }
 
@@ -2334,21 +2335,21 @@ void gTimeline::OnPopUpRowSelection( wxCommandEvent& event )
 
 void gTimeline::OnPopUpGradientColor( wxCommandEvent& event )
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setGradientColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::OnPopUpNotNullGradientColor( wxCommandEvent& event )
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setNotNullGradientColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::OnPopUpAlternativeGradientColor( wxCommandEvent& event )
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setAlternativeGradientColorMode();
   myWindow->setRedraw( true );
 }
@@ -3550,8 +3551,8 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
 
   PRV_UINT32 precision = ParaverConfig::getInstance()->getTimelinePrecision();
   
-  if( forceRedoColors || 
-      ( redoColors &&
+  if( forceRedoColorsPanel || 
+      ( redoColorsPanel &&
         ( myWindow->getSemanticInfoType() != lastType ||
           myWindow->getMinimumY() != lastMin ||
           myWindow->getMaximumY() != lastMax ||
@@ -3751,8 +3752,8 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     selectedCustomColor = nullptr;
     panelSelectedColor->Enable( false );
   }
-  forceRedoColors = false;
-  redoColors = false;
+  forceRedoColorsPanel = false;
+  redoColorsPanel = false;
 }
 
 
@@ -3808,14 +3809,14 @@ void gTimeline::drawEventFlags( bool draw )
 
 void gTimeline::drawFunctionLineColor()
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setFunctionLineColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::drawFusedLinesColor()
 {
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
   myWindow->setFusedLinesColorMode();
   myWindow->setRedraw( true );
 }
@@ -6480,7 +6481,7 @@ void gTimeline::OnCheckboxCustomPaletteClick( wxCommandEvent& event )
   if( myWindow->existCustomColors() )
     myWindow->setForceRedraw( true );
 
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
 }
 
 
