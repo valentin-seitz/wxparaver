@@ -383,9 +383,8 @@ void RunScript::Init()
   applicationLabel[ TExternalApp::USER_COMMAND ]     = wxString( wxT("User command") );
   // Following only for warning dialogs
   applicationLabel[ TExternalApp::DIMEMAS_GUI ]      = wxString( wxT("DimemasGUI") );
-  applicationLabel[ TExternalApp::PRVSTATS ]         = wxString( wxT("prvstats") );
   
-  // application names
+  // Application binary names
   application[ TExternalApp::DIMEMAS_WRAPPER ]       = wxString( wxT("dimemas-wrapper.sh") );
 #ifdef _WIN32
   application[ TExternalApp::PRVSTATS_WRAPPER ]      = wxString( wxT("prvstats.exe") );
@@ -394,10 +393,16 @@ void RunScript::Init()
 #endif
   application[ TExternalApp::CLUSTERING ]            = wxString( wxT("BurstClustering") );
   application[ TExternalApp::FOLDING ]               = wxString( wxT("rri-auto") );
+  application[ TExternalApp::PROFET ]                = wxString( wxT("profet-prv") );
   application[ TExternalApp::USER_COMMAND ]          = wxString( wxT("") ); // NOT USED
   application[ TExternalApp::DIMEMAS_GUI ]           = wxString( wxT("DimemasGUI") );
-  application[ TExternalApp::PRVSTATS ]              = wxString( wxT("prvstats") );
-  application[ TExternalApp::PROFET ]                = wxString( wxT("profet-prv") );
+
+  // Application check names
+  applicationCheck[ TExternalApp::DIMEMAS_WRAPPER ]       = wxString( wxT("Dimemas") );
+  applicationCheck[ TExternalApp::PRVSTATS_WRAPPER ]      = wxString( wxT("prvstats") );
+  applicationCheck[ TExternalApp::CLUSTERING ]            = wxString( wxT("BurstClustering") );
+  applicationCheck[ TExternalApp::FOLDING ]               = wxString( wxT("rri-auto") );
+  applicationCheck[ TExternalApp::PROFET ]                = wxString( wxT("profet-prv") );
 
   tagFoldingOutputDirectory = wxString( wxT("Output directory:") );
 
@@ -1048,15 +1053,15 @@ void RunScript::CreateControls()
 ////@end RunScript content construction
   listboxRunLog->ShowScrollbars( wxSHOW_SB_ALWAYS, wxSHOW_SB_ALWAYS );
 
-  for ( int i = static_cast<int>( TExternalApp::DIMEMAS_WRAPPER ); i < static_cast<int>( TExternalApp::USER_COMMAND ); ++i )
+  for ( long int i = static_cast<long int>( TExternalApp::DIMEMAS_WRAPPER ); i < static_cast<long int>( TExternalApp::USER_COMMAND ); ++i )
   {
-    choiceApplication->Append( applicationLabel[ TExternalApp( i ) ] );
-    appIsFound[ i ] = true;
-    // appIsFound[ i ] = existCommand( application[ TExternalApp( i + static_cast<int>( TExternalApp::DIMEMAS_WRAPPER ) ) ] );
-    // if ( !appIsFound[ i ] )
-    //   choiceApplication->SetString( i, applicationLabel[ TExternalApp( i ) ] + " [NOT FOUND]" );
+    // appIsFound[ i ] = existCommand( applicationCheck[ TExternalApp( i ) ] );
+    if ( appIsFound[ i ] = existCommand( applicationCheck[ TExternalApp( i ) ] ) )
+    {
+      choiceApplication->Append( applicationLabel[ TExternalApp( i ) ], (void *)i );
+    }
   }
-  choiceApplication->Append( applicationLabel[ TExternalApp::USER_COMMAND ] );
+  choiceApplication->Append( applicationLabel[ TExternalApp::USER_COMMAND ], (void *)TExternalApp::USER_COMMAND );
   appIsFound[ static_cast<int>( TExternalApp::USER_COMMAND ) ] = true;
 
   // Trace browser
@@ -1096,8 +1101,7 @@ void RunScript::CreateControls()
   clusteringTextBoxRefinementEpsilonMax->SetValidator( validator );
   clusteringTextBoxNumberOfSamples->SetValidator( validator );
 
-  int appNumber = static_cast<int>( TExternalApp::DIMEMAS_WRAPPER ); // Default is 0
-  choiceApplication->Select( appNumber );
+  choiceApplication->Select( 0 );
 
   adaptWindowToApplicationSelection();
 
@@ -1165,7 +1169,7 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
 
   if ( selectedApp == TExternalApp::DEFAULT )
   {
-    selectedApp = static_cast< TExternalApp >( choiceApplication->GetSelection() );
+    selectedApp = getSelectedApp();
   }
 
   switch ( selectedApp )
@@ -1247,11 +1251,10 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
       break;
 
     case TExternalApp::PRVSTATS_WRAPPER:
-    case TExternalApp::PRVSTATS:
 
       if ( textCtrlDefaultParameters->GetValue() == wxString( wxT( "--help" ) ))
       {
-        command  = application[ TExternalApp::PRVSTATS ];
+        command  = application[ TExternalApp::PRVSTATS_WRAPPER ];
         parameters = textCtrlDefaultParameters->GetValue();
         helpOption = true;
       }
@@ -1566,7 +1569,7 @@ wxString RunScript::GetReachableCommand( TExternalApp selectedApp )
   {
     if ( selectedApp == TExternalApp::DEFAULT )
     {
-      selectedApp = (TExternalApp)choiceApplication->GetSelection();
+      selectedApp = getSelectedApp();
     }
 
     switch ( selectedApp )
@@ -1660,7 +1663,7 @@ void RunScript::OnButtonRunClick( wxCommandEvent& event )
   wxString readyCommand = GetReachableCommand();
   if ( !readyCommand.IsEmpty() )
   {
-    if ( choiceApplication->GetSelection() == static_cast< int >( TExternalApp::CLUSTERING ) )
+    if ( getSelectedApp() == TExternalApp::CLUSTERING )
     {
       // Check the output trace path
       if ( !textCtrlClusteringOutputTrace->IsEmpty() )
@@ -1719,7 +1722,7 @@ void RunScript::OnButtonRunUpdate( wxUpdateUIEvent& event )
   // Check parameters
   bool active = ( myProcess == nullptr );
 
-  TExternalApp selectedApp = (TExternalApp)choiceApplication->GetSelection();
+  TExternalApp selectedApp = getSelectedApp();
   active &= appIsFound[ static_cast<int>( selectedApp ) ];
 
   switch ( selectedApp )
@@ -1782,7 +1785,7 @@ void RunScript::OnProcessTerminated( int pid )
 
 void RunScript::AppendToLog( wxString msg, bool formatOutput )
 {
-  TExternalApp selectedApp = (TExternalApp)choiceApplication->GetSelection();
+  TExternalApp selectedApp = getSelectedApp();
 
   // Bar width for progress is 30 by default
   static regex progressRegex( R"(\[([#]{30}|[\s]{30}|[#]+[\s]+)\]\s+[0-9]+[.][0-9]%)" );
@@ -1849,7 +1852,7 @@ wxString RunScript::doubleQuote( const wxString& path )
 void RunScript::adaptWindowToApplicationSelection()
 {
   wxString toolTip( wxT( "" ) );
-  currentApp = static_cast<TExternalApp>( choiceApplication->GetSelection() );
+  currentApp = getSelectedApp();
 
   textCtrlDefaultParameters->Clear();
   labelTextCtrlDefaultParameters->SetToolTip( toolTip );
@@ -2262,7 +2265,7 @@ wxString RunScript::insertLog( wxString rawLine, wxArrayString extensions )
   {
     formattedLine = insertTimeMarkLink( rawLine, tagPosition );
   }
-  else if (( choiceApplication->GetSelection() == static_cast< int >( TExternalApp::FOLDING ) ) && readFoldingTag( rawLine ) )
+  else if ( ( getSelectedApp() == TExternalApp::FOLDING ) && readFoldingTag( rawLine ) )
   {
     formattedLine = rawFormat( rawLine );
   }
@@ -2687,7 +2690,7 @@ void RunScript::adaptClusteringAlgorithmParameters()
   clusteringLabelRefinementMinPoints->Enable( tuneByHand );
   clusteringTextBoxRefinementMinPoints->Enable( tuneByHand );
 
-  bool clusteringSelected = ( choiceApplication->GetSelection() == static_cast< int >( TExternalApp::CLUSTERING ) );
+  bool clusteringSelected = getSelectedApp() == TExternalApp::CLUSTERING;
   clusteringSizerDBScan->Show( clusteringSelected && clusteringRadioDBScan->GetValue() );
   clusteringSizerRefinement->Show( clusteringSelected && clusteringRadioRefinement->GetValue() );
   clusteringAlgorithmLineSeparator->Show( clusteringSelected && !clusteringRadioXMLDefined->GetValue() );
@@ -2760,17 +2763,17 @@ void RunScript::OnButtonKillClick( wxCommandEvent& event )
  */
 void RunScript::OnTextctrlTraceTextUpdated( wxCommandEvent& event )
 {
-  if ( choiceApplication->GetSelection() == static_cast<int>( TExternalApp::PRVSTATS_WRAPPER ) )
+  if ( getSelectedApp() == TExternalApp::PRVSTATS_WRAPPER )
   {
     statsTextCtrlOutputName->SetValue( fileBrowserButtonTrace->GetPath() );
   }
-  else if ( choiceApplication->GetSelection() == static_cast<int>( TExternalApp::DIMEMAS_WRAPPER ) )
+  else if ( getSelectedApp() == TExternalApp::DIMEMAS_WRAPPER )
   {
     textCtrlOutputTrace->SetValue( wxString( (
             LocalKernel::composeName( std::string( event.GetString().mb_str() ),
                                       std::string( "sim" ) ) + PRV_SUFFIX ).c_str(), wxConvUTF8 ) );
   }
-  else if ( choiceApplication->GetSelection() == static_cast<int>( TExternalApp::CLUSTERING ) )
+  else if ( getSelectedApp() == TExternalApp::CLUSTERING )
   {
     /*tmpFilename = wxFileName( fileBrowserButtonTrace->GetPath() );
     tmpPath = tmpFilename.GetPath( wxPATH_GET_SEPARATOR );
@@ -2783,7 +2786,7 @@ void RunScript::OnTextctrlTraceTextUpdated( wxCommandEvent& event )
                                     std::string( "clustered" ) ) + PRV_SUFFIX ).c_str(), wxConvUTF8 ) );
     }
   }
-  else if ( choiceApplication->GetSelection() == static_cast<int>( TExternalApp::PROFET ) )
+  else if ( getSelectedApp() == TExternalApp::PROFET )
   {
     textCtrlProfetOutputTrace->SetValue(
             wxString( ( LocalKernel::composeName( std::string( event.GetString().mb_str() ), "profet" ) +
@@ -2794,7 +2797,8 @@ void RunScript::OnTextctrlTraceTextUpdated( wxCommandEvent& event )
 
 bool RunScript::existCommand( const wxString& program )
 {
-  return wxExecute( program + _(" ") + wxT( " --version" ), wxEXEC_SYNC ) == 0 ;
+  static wxArrayString tmpOutput, tmpErrors;
+  return wxExecute( program + _(" ") + wxT( " --version" ), tmpOutput, tmpErrors, wxEXEC_SYNC ) == 0 ;
 }
 
 
@@ -2952,3 +2956,7 @@ void RunScript::OnProfetAdditionalPlotsUpdate( wxUpdateUIEvent& event )
   }
 }
 
+TExternalApp RunScript::getSelectedApp() const
+{
+  return static_cast<TExternalApp>( (long int)choiceApplication->GetClientData( choiceApplication->GetSelection() ) );
+}

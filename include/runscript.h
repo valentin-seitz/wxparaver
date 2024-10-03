@@ -185,7 +185,6 @@ enum class TExternalApp
 
   // --- Called by different widget ---
   DIMEMAS_GUI,         // DimemasGui   invoked through button
-  PRVSTATS                // prvstats binary invoked by help
 };
 
 /*!
@@ -448,12 +447,6 @@ private:
   long myProcessPid;
 ////@end RunScript member variables
   int pidDimemasGUI;
-/*
-public:
-  int executionStatus;
-
-private:
-*/
 
   static wxString clusteringXML;
 
@@ -462,6 +455,7 @@ private:
   // Application list: labels and names
   std::map< TExternalApp, wxString > applicationLabel;
   std::map< TExternalApp, wxString > application;
+  std::map< TExternalApp, wxString > applicationCheck;
 
   using TMakeLinkFunction = std::function< bool( const wxString&, const wxString&, wxString&, wxString& ) >;
   std::map< TExternalApp, TMakeLinkFunction > applicationLinkMaker;
@@ -500,6 +494,7 @@ private:
   void setApp( TExternalApp whichApp );
   void adaptClusteringAlgorithmParameters();
   void adaptWindowToApplicationSelection();
+  TExternalApp getSelectedApp() const;
 
   // Command check and build
   void ShowWarning( wxString message );
