@@ -511,7 +511,6 @@ private:
   wxString rawFormat( wxString rawLine );
   bool timeMarkTagFound( wxString rawLine, std::pair< int, wxString >  &tagPosition );
   wxString insertTimeMarkLink( wxString rawLine, std::pair< int, wxString > tagPosition );
-  //wxString insertLinks( wxString rawLine, wxArrayString extensions );
   wxString insertLinks( wxString rawLine );
 
   wxString insertLog( wxString rawLine, wxArrayString extensions );
@@ -522,9 +521,6 @@ private:
   bool matchHrefPrefix( wxHtmlLinkEvent &event, const wxString extension ) const;
 
   // Execution
-  //void OnTerminateShellCommand( int pid, int status );
-
-  //bool shellCommand( const wxString& program, const wxString& whichFile );
   bool existCommand( const wxString& program );
   void runCommandAsync( const wxString& program, const wxString& parameter );
   void runDetachedProcess( wxString command, bool checkPidDimemasGUI = false );

@@ -81,7 +81,6 @@ void RunningProcess::OnTerminate( int pid, int status )
   while ( HasInput() )
     ;
 
-  //parent->executionStatus = status;
   parent->OnProcessTerminated( pid );
 }
 
@@ -351,8 +350,6 @@ void RunScript::Init()
   listboxRunLog = NULL;
   buttonExit = NULL;
 ////@end RunScript member initialisation
-
-  //executionStatus = -2;
 
   progressBar = nullptr;
 
@@ -1055,7 +1052,6 @@ void RunScript::CreateControls()
 
   for ( long int i = static_cast<long int>( TExternalApp::DIMEMAS_WRAPPER ); i < static_cast<long int>( TExternalApp::USER_COMMAND ); ++i )
   {
-    // appIsFound[ i ] = existCommand( applicationCheck[ TExternalApp( i ) ] );
     if ( appIsFound[ i ] = existCommand( applicationCheck[ TExternalApp( i ) ] ) )
     {
       choiceApplication->Append( applicationLabel[ TExternalApp( i ) ], (void *)i );
@@ -1392,36 +1388,6 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
     case TExternalApp::FOLDING:
       command = application[ TExternalApp::FOLDING ];
 
-      /* // Only FOLDING
-      
-      if ( comboboxFoldingModel->GetValue() != wxString( wxT("none") ) )
-      {
-        parameters += wxString( wxT( " -model " ) ) + doubleQuote( comboboxFoldingModel->GetValue() );
-      }
-
-      parameters += wxString( wxT(" ") ) + doubleQuote( fileBrowserButtonTrace->GetPath() );
-      
-      if ( checkboxFoldingUseSemanticValues->IsChecked() )
-      {
-        if ( !foldingCSV.IsEmpty() )
-        {
-          parameters += wxString( wxT(" ") );
-          parameters += doubleQuote( foldingCSV );
-        }
-      }
-      else
-      {
-        parameters += wxString( wxT( " " ) );
-        parameters += doubleQuote( expandVariables( textCtrlDefaultParameters->GetValue() ) ); // Event type
-      }
-      
-      if ( textCtrlDefaultParameters->GetValue() == wxString( wxT( "--help" ) ))
-      {
-        helpOption = true;
-      }
-      
-      */
-
       // Flags
       if ( checkboxFoldingOnly->IsChecked() )
       {
@@ -1436,7 +1402,6 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
       // --folding-args
       if ( comboboxFoldingModel->GetValue() != wxString( wxT("none") ) )
       {
-        //tmpFoldingArgs += wxString( wxT( " -model " ) ) + doubleQuote( comboboxFoldingModel->GetValue() );
         tmpFoldingArgs += doubleQuote( wxString( wxT( " -model " ) ) + comboboxFoldingModel->GetValue() );
       }
       if( !tmpFoldingArgs.IsEmpty() )
@@ -1693,7 +1658,6 @@ void RunScript::OnButtonRunClick( wxCommandEvent& event )
 
     if ( ready )
     {
-      //executionStatus = -2;
       myProcess = new RunningProcess( this, readyCommand );
       myProcessPid = wxExecute( readyCommand, wxEXEC_ASYNC|wxEXEC_MAKE_GROUP_LEADER, myProcess );
 
@@ -2534,7 +2498,6 @@ void RunScript::OnListboxRunLogLinkClicked( wxHtmlLinkEvent& event )
 
 void RunScript::runDetachedProcess( wxString command, bool checkPidDimemasGUI )
 {
-  //executionStatus = -2;
   RunningProcess *localProcess = new RunningProcess( this, command );
 
   int myProcessPid = wxExecute( command, wxEXEC_ASYNC, localProcess );
@@ -2577,7 +2540,6 @@ void RunScript::OnButtonDimemasGuiClick( wxCommandEvent& event )
  */
 void RunScript::OnButtonDimemasGuiUpdate( wxUpdateUIEvent& event )
 {
-  // bool active = ( myProcess == nullptr );
   bool active = ( pidDimemasGUI == 0 );
   
   if ( active && !buttonDimemasGUI->IsEnabled() )
@@ -2775,10 +2737,6 @@ void RunScript::OnTextctrlTraceTextUpdated( wxCommandEvent& event )
   }
   else if ( getSelectedApp() == TExternalApp::CLUSTERING )
   {
-    /*tmpFilename = wxFileName( fileBrowserButtonTrace->GetPath() );
-    tmpPath = tmpFilename.GetPath( wxPATH_GET_SEPARATOR );
-    tmpNameWOExtension = tmpFilename.GetName();
-    */
     if ( textCtrlClusteringOutputTrace->IsEmpty() )
     {
       textCtrlClusteringOutputTrace->SetValue( wxString( (
@@ -2818,7 +2776,6 @@ void RunScript::OnBitmapbuttonClusteringXmlClick( wxCommandEvent& event )
 
 
   wxArrayString editor = paraverMain::FromVectorStringToWxArray( ParaverConfig::getInstance()->getGlobalExternalTextEditors(), "txt" );
-  //wxArrayString versionParameter;
   
   size_t i;
   for ( i = 0; i < editor.size(); ++i )
