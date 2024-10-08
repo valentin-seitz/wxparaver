@@ -26,7 +26,7 @@
 #include <wx/string.h>
 #include <array>
 
-enum class TExternalApp
+enum class TExternalAppID
 {
   // --- Called through RunScript choice selector widget --- 
   DIMEMAS_WRAPPER = 0, // Dimemas
@@ -48,18 +48,21 @@ class ExternalApps
   public:
     ExternalApps() = delete;
 
-    static wxString getApplicationLabel( TExternalApp whichApp );
-    static wxString getApplicationBin( TExternalApp whichApp );
-    static wxString getApplicationCheckBin( TExternalApp whichApp );
+    static wxString getApplicationLabel( TExternalAppID whichApp );
+    static wxString getApplicationBin( TExternalAppID whichApp );
+    static wxString getApplicationCheckBin( TExternalAppID whichApp );
+
+    static bool existCommand( const wxString& program );
+    static bool existCommand( TExternalAppID programID );
 
   private:
     // Labels to construct selector & warning dialogs
-    static const std::array< wxString, (int)TExternalApp::NUMBER_APPS > applicationLabel;
+    static const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > applicationLabel;
 
     // Application binary names
-    static const std::array< wxString, (int)TExternalApp::NUMBER_APPS > applicationBin;
+    static const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > applicationBin;
 
     // Application binary check names
-    static const std::array< wxString, (int)TExternalApp::NUMBER_APPS > applicationCheckBin;
+    static const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > applicationCheckBin;
 
 };

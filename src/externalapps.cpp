@@ -21,10 +21,13 @@
  *   Barcelona Supercomputing Center - Centro Nacional de Supercomputacion   *
 \*****************************************************************************/
 
+#include <wx/arrstr.h>
+#include <wx/utils.h> 
+
 #include "externalapps.h"
 
 // Labels to construct selector & warning dialogs
-const std::array< wxString, (int)TExternalApp::NUMBER_APPS > ExternalApps::applicationLabel = {
+const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationLabel = {
   wxString( "Dimemas" ),      //DIMEMAS_WRAPPER
   wxString( "prvstats" ),     //PRVSTATS_WRAPPER
   wxString( "Clustering" ),   //CLUSTERING
@@ -37,7 +40,7 @@ const std::array< wxString, (int)TExternalApp::NUMBER_APPS > ExternalApps::appli
 };
 
 // Application binary names
-const std::array< wxString, (int)TExternalApp::NUMBER_APPS > ExternalApps::applicationBin = {
+const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationBin = {
   wxString( "dimemas-wrapper.sh"),  // DIMEMAS_WRAPPER
 #ifdef _WIN32
   wxString( "prvstats.exe"),        // PRVSTATS_WRAPPER
@@ -52,7 +55,7 @@ const std::array< wxString, (int)TExternalApp::NUMBER_APPS > ExternalApps::appli
 };
 
 // Application binary check names
-const std::array< wxString, (int)TExternalApp::NUMBER_APPS > ExternalApps::applicationCheckBin = {
+const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationCheckBin = {
   wxString( "Dimemas" ),         // DIMEMAS_WRAPPER
   wxString( "prvstats" ),        // PRVSTATS_WRAPPER
   wxString( "BurstClustering" ), // CLUSTERING
@@ -62,17 +65,28 @@ const std::array< wxString, (int)TExternalApp::NUMBER_APPS > ExternalApps::appli
   wxString( "DimemasGUI")        // DIMEMAS_GUI
 };
 
-wxString ExternalApps::getApplicationLabel( TExternalApp whichApp )
+wxString ExternalApps::getApplicationLabel( TExternalAppID whichApp )
 {
   return ExternalApps::applicationLabel[ static_cast< int >( whichApp ) ];
 }
 
-wxString ExternalApps::getApplicationBin( TExternalApp whichApp )
+wxString ExternalApps::getApplicationBin( TExternalAppID whichApp )
 {
   return ExternalApps::applicationBin[ static_cast< int >( whichApp ) ];
 }
 
-wxString ExternalApps::getApplicationCheckBin( TExternalApp whichApp )
+wxString ExternalApps::getApplicationCheckBin( TExternalAppID whichApp )
 {
   return ExternalApps::applicationCheckBin[ static_cast< int >( whichApp ) ];
+}
+
+bool ExternalApps::existCommand( const wxString& program )
+{
+  static wxArrayString tmpOutput, tmpErrors;
+  return wxExecute( program + " --version", tmpOutput, tmpErrors, wxEXEC_SYNC ) == 0;
+}
+
+bool ExternalApps::existCommand( TExternalAppID programID )
+{
+  return ExternalApps::existCommand( getApplicationCheckBin( programID ) );
 }

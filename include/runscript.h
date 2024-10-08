@@ -433,10 +433,10 @@ private:
 
   static wxString clusteringXML;
 
-  TExternalApp currentApp;
+  TExternalAppID currentApp;
 
   using TMakeLinkFunction = std::function< bool( const wxString&, const wxString&, wxString&, wxString& ) >;
-  std::map< TExternalApp, TMakeLinkFunction > applicationLinkMaker;
+  std::map< TExternalAppID, TMakeLinkFunction > applicationLinkMaker;
   TMakeLinkFunction defaultLinkMaker;
   
   std::map< int, bool > appIsFound;
@@ -469,10 +469,10 @@ private:
   wxProgressDialog *progressBar;
 
   // Selection
-  void setApp( TExternalApp whichApp );
+  void setApp( TExternalAppID whichApp );
   void adaptClusteringAlgorithmParameters();
   void adaptWindowToApplicationSelection();
-  TExternalApp getSelectedApp() const;
+  TExternalAppID getSelectedApp() const;
 
   // Command check and build
   void ShowWarning( wxString message );
@@ -481,8 +481,8 @@ private:
   wxString doubleQuote( const wxString& path );
   wxString expandVariables( wxString command );
 
-  wxString GetCommand( wxString &command, wxString &parameters, TExternalApp selectedApp );
-  wxString GetReachableCommand( TExternalApp selectedApp ); // adds path to the binary
+  wxString GetCommand( wxString &command, wxString &parameters, TExternalAppID selectedApp );
+  wxString GetReachableCommand( TExternalAppID selectedApp ); // adds path to the binary
 
   // Log related
   bool readFoldingTag( wxString rawLine );
@@ -499,7 +499,6 @@ private:
   bool matchHrefPrefix( wxHtmlLinkEvent &event, const wxString extension ) const;
 
   // Execution
-  bool existCommand( const wxString& program );
   void runCommandAsync( const wxString& program, const wxString& parameter );
   void runDetachedProcess( wxString command, bool checkPidDimemasGUI = false );
 };
