@@ -29,16 +29,16 @@
 enum class TExternalAppID
 {
   // --- Called through RunScript choice selector widget --- 
-  DIMEMAS_WRAPPER = 0, // Dimemas
-  PRVSTATS_WRAPPER,    // prvstats
-  CLUSTERING,          // Clustering
-  FOLDING,             // Folding
-  PROFET,              // Profet
-                        // <-- add new apps here at most
-  USER_COMMAND,        // User command
+  DIMEMAS = 0,  // Dimemas
+  PRVSTATS,     // prvstats
+  CLUSTERING,   // Clustering
+  FOLDING,      // Folding
+  PROFET,       // Profet
+    // <-- add new apps here at most
+  USER_COMMAND, // User command
 
   // --- Called by different widget ---
-  DIMEMAS_GUI,         // DimemasGui   invoked through button
+  DIMEMAS_GUI,  // DimemasGui   invoked through button
 
   NUMBER_APPS
 };

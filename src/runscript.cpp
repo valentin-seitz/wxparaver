@@ -1020,7 +1020,7 @@ void RunScript::CreateControls()
 ////@end RunScript content construction
   listboxRunLog->ShowScrollbars( wxSHOW_SB_ALWAYS, wxSHOW_SB_ALWAYS );
 
-  for ( long int i = static_cast<long int>( TExternalAppID::DIMEMAS_WRAPPER ); i < static_cast<long int>( TExternalAppID::USER_COMMAND ); ++i )
+  for ( long int i = static_cast<long int>( TExternalAppID::DIMEMAS ); i < static_cast<long int>( TExternalAppID::USER_COMMAND ); ++i )
   {
     if ( appIsFound[ i ] = ExternalApps::existCommand( TExternalAppID( i ) ) )
     {
@@ -1135,8 +1135,8 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
 
   switch ( selectedApp )
   {
-    case TExternalAppID::DIMEMAS_WRAPPER:
-      command = ExternalApps::getApplicationBin( TExternalAppID::DIMEMAS_WRAPPER );
+    case TExternalAppID::DIMEMAS:
+      command = ExternalApps::getApplicationBin( TExternalAppID::DIMEMAS );
 
       parameters = doubleQuote( fileBrowserButtonTrace->GetPath() ); // Source trace
       parameters += wxString( wxT( " " ) ) + doubleQuote( fileBrowserButtonDimemasCFG->GetPath() ); // Dimemas cfg
@@ -1211,18 +1211,18 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
 
       break;
 
-    case TExternalAppID::PRVSTATS_WRAPPER:
+    case TExternalAppID::PRVSTATS:
 
       if ( textCtrlDefaultParameters->GetValue() == wxString( wxT( "--help" ) ))
       {
-        command  = ExternalApps::getApplicationBin( TExternalAppID::PRVSTATS_WRAPPER );
+        command  = ExternalApps::getApplicationBin( TExternalAppID::PRVSTATS );
         parameters = textCtrlDefaultParameters->GetValue();
         helpOption = true;
       }
       else
       {
         // TODO: DEFAULT VALUES?
-        command  = ExternalApps::getApplicationBin( TExternalAppID::PRVSTATS_WRAPPER );
+        command  = ExternalApps::getApplicationBin( TExternalAppID::PRVSTATS );
 
         parameters = doubleQuote( fileBrowserButtonTrace->GetPath() ); // Source trace
         parameters += wxString( wxT( " -o " ) ) + doubleQuote( statsTextCtrlOutputName->GetValue() ); // Final name
@@ -1512,7 +1512,7 @@ wxString RunScript::GetReachableCommand( TExternalAppID selectedApp )
 
         break;
 
-      case TExternalAppID::DIMEMAS_WRAPPER:
+      case TExternalAppID::DIMEMAS:
         pathToProgram = getEnvironmentPath( TEnvironmentVar::PATH, program );
         if ( !pathToProgram.IsEmpty() )
         {
@@ -1533,7 +1533,7 @@ wxString RunScript::GetReachableCommand( TExternalAppID selectedApp )
 
         break;
 
-      case TExternalAppID::PRVSTATS_WRAPPER:
+      case TExternalAppID::PRVSTATS:
         pathToProgram = getEnvironmentPath( TEnvironmentVar::PATH, program );
         if ( !pathToProgram.IsEmpty() )
         {
@@ -1651,13 +1651,13 @@ void RunScript::OnButtonRunUpdate( wxUpdateUIEvent& event )
 
   switch ( selectedApp )
   {
-    case TExternalAppID::DIMEMAS_WRAPPER:
+    case TExternalAppID::DIMEMAS:
       active &= !fileBrowserButtonTrace->GetPath().IsEmpty();
       active &= !fileBrowserButtonDimemasCFG->GetPath().IsEmpty();
       active &= !textCtrlOutputTrace->GetValue().IsEmpty();
       break;
 
-    case TExternalAppID::PRVSTATS_WRAPPER:
+    case TExternalAppID::PRVSTATS:
       active &= !fileBrowserButtonTrace->GetPath().IsEmpty();
       break;
       
@@ -1783,7 +1783,7 @@ void RunScript::adaptWindowToApplicationSelection()
 
   switch ( currentApp )
   {
-    case TExternalAppID::DIMEMAS_WRAPPER:
+    case TExternalAppID::DIMEMAS:
       toolTip = wxString( wxT( "Extra parameters passed to the script\n"
                                "%TRACE refers to input trace" ) );
 
@@ -1797,7 +1797,7 @@ void RunScript::adaptWindowToApplicationSelection()
       textCtrlDefaultParameters->Show();
       break;
 
-    case TExternalAppID::PRVSTATS_WRAPPER:
+    case TExternalAppID::PRVSTATS:
       toolTip = wxString( wxT( "Extra parameters passed to 'prvstats'\n"
                                "-events_histo[:type1[-type2],...]\n"
                                "-thread_calls[:type1[-type2],...]\n" ) );
@@ -1885,8 +1885,8 @@ void RunScript::adaptWindowToApplicationSelection()
       break;
   }
 
-  dimemasSection->Show( currentApp == TExternalAppID::DIMEMAS_WRAPPER );
-  statsSection->Show( currentApp == TExternalAppID::PRVSTATS_WRAPPER );
+  dimemasSection->Show( currentApp == TExternalAppID::DIMEMAS );
+  statsSection->Show( currentApp == TExternalAppID::PRVSTATS );
   clusteringSection->Show( currentApp == TExternalAppID::CLUSTERING );
   adaptClusteringAlgorithmParameters();
   foldingSection->Show( currentApp == TExternalAppID::FOLDING );
@@ -2017,8 +2017,8 @@ void RunScript::InitOutputLinks()
 
   defaultLinkMaker = makeLinkComponents;
 
-  applicationLinkMaker[ TExternalAppID::DIMEMAS_WRAPPER ]  = makeLinkComponents;
-  applicationLinkMaker[ TExternalAppID::PRVSTATS_WRAPPER ] = makeLinkComponents;
+  applicationLinkMaker[ TExternalAppID::DIMEMAS ]  = makeLinkComponents;
+  applicationLinkMaker[ TExternalAppID::PRVSTATS ] = makeLinkComponents;
   applicationLinkMaker[ TExternalAppID::CLUSTERING ]       = makeLinkComponentsClustering;
   applicationLinkMaker[ TExternalAppID::FOLDING ]          = makeLinkComponentsFolding;
   applicationLinkMaker[ TExternalAppID::PROFET ]           = makeLinkComponents;
@@ -2562,13 +2562,13 @@ void RunScript::setApp( TExternalAppID whichApp )
 
 void RunScript::setDimemas()
 {
-  setApp( TExternalAppID::DIMEMAS_WRAPPER );
+  setApp( TExternalAppID::DIMEMAS );
 }
 
 
 void RunScript::setStats()
 {
-  setApp( TExternalAppID::PRVSTATS_WRAPPER );
+  setApp( TExternalAppID::PRVSTATS );
 }
 
 
@@ -2685,11 +2685,11 @@ void RunScript::OnButtonKillClick( wxCommandEvent& event )
  */
 void RunScript::OnTextctrlTraceTextUpdated( wxCommandEvent& event )
 {
-  if ( getSelectedApp() == TExternalAppID::PRVSTATS_WRAPPER )
+  if ( getSelectedApp() == TExternalAppID::PRVSTATS )
   {
     statsTextCtrlOutputName->SetValue( fileBrowserButtonTrace->GetPath() );
   }
-  else if ( getSelectedApp() == TExternalAppID::DIMEMAS_WRAPPER )
+  else if ( getSelectedApp() == TExternalAppID::DIMEMAS )
   {
     textCtrlOutputTrace->SetValue( wxString( (
             LocalKernel::composeName( std::string( event.GetString().mb_str() ),

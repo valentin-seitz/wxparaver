@@ -22,16 +22,20 @@
 \*****************************************************************************/
 
 
-#include "popupmenu.h"
-#include "labelconstructor.h"
-#include "window.h"
-#include "syncwindows.h"
 #include <wx/event.h>
-#include <iostream>
+
 #include <cmath>
-#include "sequencedriver.h"
-#include "paravermain.h"
+#include <iostream>
+
+#include "popupmenu.h"
+
+#include "externalapps.h"
+#include "labelconstructor.h"
 #include "paraverlabels.h"
+#include "paravermain.h"
+#include "sequencedriver.h"
+#include "syncwindows.h"
+#include "window.h"
 
 using namespace std;
 
@@ -609,10 +613,14 @@ gPopUpMenu<gTimeline>::gPopUpMenu( gTimeline *whichTimeline )
   AppendSeparator();
   
   buildItem( popUpMenuRun, _( "Cutter" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_CUTTER );
-  buildItem( popUpMenuRun, _( "Dimemas" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_DIMEMAS );
-  buildItem( popUpMenuRun, _( "Clustering" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_CLUSTERING );
-  buildItem( popUpMenuRun, _( "Folding" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_FOLDING );
-  buildItem( popUpMenuRun, _( "PROFET" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_PROFET );
+  if( ExternalApps::existCommand( TExternalAppID::DIMEMAS ) )
+    buildItem( popUpMenuRun, _( "Dimemas" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_DIMEMAS );
+  if( ExternalApps::existCommand( TExternalAppID::CLUSTERING ) )
+    buildItem( popUpMenuRun, _( "Clustering" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_CLUSTERING );
+  if( ExternalApps::existCommand( TExternalAppID::FOLDING ) )
+    buildItem( popUpMenuRun, _( "Folding" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_FOLDING );
+  if( ExternalApps::existCommand( TExternalAppID::PROFET ) )
+    buildItem( popUpMenuRun, _( "PROFET" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_PROFET );
   buildItem( popUpMenuRun, _( "User Command" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_USER_COMMAND );
   AppendSubMenu( popUpMenuRun, _( "Run" ) );
   

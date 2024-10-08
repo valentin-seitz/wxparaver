@@ -28,8 +28,8 @@
 
 // Labels to construct selector & warning dialogs
 const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationLabel = {
-  wxString( "Dimemas" ),      //DIMEMAS_WRAPPER
-  wxString( "prvstats" ),     //PRVSTATS_WRAPPER
+  wxString( "Dimemas" ),      //DIMEMAS
+  wxString( "prvstats" ),     //PRVSTATS
   wxString( "Clustering" ),   //CLUSTERING
   wxString( "Folding" ),      //FOLDING
   wxString( "PROFET" ),       //PROFET
@@ -41,11 +41,11 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
 
 // Application binary names
 const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationBin = {
-  wxString( "dimemas-wrapper.sh"),  // DIMEMAS_WRAPPER
+  wxString( "dimemas-wrapper.sh"),  // DIMEMAS
 #ifdef _WIN32
-  wxString( "prvstats.exe"),        // PRVSTATS_WRAPPER
+  wxString( "prvstats.exe"),        // PRVSTATS
 #else
-  wxString( "prvstats-wrapper.sh"), // PRVSTATS_WRAPPER
+  wxString( "prvstats-wrapper.sh"), // PRVSTATS
 #endif
   wxString( "BurstClustering"),     // CLUSTERING
   wxString( "rri-auto"),            // FOLDING
@@ -56,8 +56,8 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
 
 // Application binary check names
 const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationCheckBin = {
-  wxString( "Dimemas" ),         // DIMEMAS_WRAPPER
-  wxString( "prvstats" ),        // PRVSTATS_WRAPPER
+  wxString( "Dimemas" ),         // DIMEMAS
+  wxString( "prvstats" ),        // PRVSTATS
   wxString( "BurstClustering" ), // CLUSTERING
   wxString( "rri-auto" ),        // FOLDING
   wxString( "profet-prv" ),      // PROFET
