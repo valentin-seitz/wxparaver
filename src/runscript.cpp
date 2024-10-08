@@ -371,36 +371,6 @@ void RunScript::Init()
   environmentVariable[ TEnvironmentVar::PARAVER_HOME ] = wxString( wxT("PARAVER_HOME") );
   environmentVariable[ TEnvironmentVar::DIMEMAS_HOME ] = wxString( wxT("DIMEMAS_HOME") );
 
-  // Labels to construct selector & warning dialogs
-  applicationLabel[ TExternalApp::DIMEMAS_WRAPPER ]  = wxString( wxT("Dimemas") );
-  applicationLabel[ TExternalApp::PRVSTATS_WRAPPER ] = wxString( wxT("prvstats") );
-  applicationLabel[ TExternalApp::CLUSTERING ]       = wxString( wxT("Clustering") );
-  applicationLabel[ TExternalApp::FOLDING ]          = wxString( wxT("Folding") );
-  applicationLabel[ TExternalApp::PROFET ]           = wxString( wxT("PROFET") );
-  applicationLabel[ TExternalApp::USER_COMMAND ]     = wxString( wxT("User command") );
-  // Following only for warning dialogs
-  applicationLabel[ TExternalApp::DIMEMAS_GUI ]      = wxString( wxT("DimemasGUI") );
-  
-  // Application binary names
-  application[ TExternalApp::DIMEMAS_WRAPPER ]       = wxString( wxT("dimemas-wrapper.sh") );
-#ifdef _WIN32
-  application[ TExternalApp::PRVSTATS_WRAPPER ]      = wxString( wxT("prvstats.exe") );
-#else
-  application[ TExternalApp::PRVSTATS_WRAPPER ]      = wxString( wxT("prvstats-wrapper.sh") );
-#endif
-  application[ TExternalApp::CLUSTERING ]            = wxString( wxT("BurstClustering") );
-  application[ TExternalApp::FOLDING ]               = wxString( wxT("rri-auto") );
-  application[ TExternalApp::PROFET ]                = wxString( wxT("profet-prv") );
-  application[ TExternalApp::USER_COMMAND ]          = wxString( wxT("") ); // NOT USED
-  application[ TExternalApp::DIMEMAS_GUI ]           = wxString( wxT("DimemasGUI") );
-
-  // Application check names
-  applicationCheck[ TExternalApp::DIMEMAS_WRAPPER ]       = wxString( wxT("Dimemas") );
-  applicationCheck[ TExternalApp::PRVSTATS_WRAPPER ]      = wxString( wxT("prvstats") );
-  applicationCheck[ TExternalApp::CLUSTERING ]            = wxString( wxT("BurstClustering") );
-  applicationCheck[ TExternalApp::FOLDING ]               = wxString( wxT("rri-auto") );
-  applicationCheck[ TExternalApp::PROFET ]                = wxString( wxT("profet-prv") );
-
   tagFoldingOutputDirectory = wxString( wxT("Output directory:") );
 
   wxString tmpTimeMarkTags[] = { _("start @"), _("found @") };
@@ -1052,12 +1022,12 @@ void RunScript::CreateControls()
 
   for ( long int i = static_cast<long int>( TExternalApp::DIMEMAS_WRAPPER ); i < static_cast<long int>( TExternalApp::USER_COMMAND ); ++i )
   {
-    if ( appIsFound[ i ] = existCommand( applicationCheck[ TExternalApp( i ) ] ) )
+    if ( appIsFound[ i ] = existCommand( ExternalApps::getApplicationCheckBin( TExternalApp( i ) ) ) )
     {
-      choiceApplication->Append( applicationLabel[ TExternalApp( i ) ], (void *)i );
+      choiceApplication->Append( ExternalApps::getApplicationLabel( TExternalApp( i ) ), (void *)i );
     }
   }
-  choiceApplication->Append( applicationLabel[ TExternalApp::USER_COMMAND ], (void *)TExternalApp::USER_COMMAND );
+  choiceApplication->Append( ExternalApps::getApplicationLabel( TExternalApp::USER_COMMAND ), (void *)TExternalApp::USER_COMMAND );
   appIsFound[ static_cast<int>( TExternalApp::USER_COMMAND ) ] = true;
 
   // Trace browser
@@ -1163,15 +1133,10 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
   command.Clear();
   parameters.Clear();
 
-  if ( selectedApp == TExternalApp::DEFAULT )
-  {
-    selectedApp = getSelectedApp();
-  }
-
   switch ( selectedApp )
   {
     case TExternalApp::DIMEMAS_WRAPPER:
-      command = application[ TExternalApp::DIMEMAS_WRAPPER ];
+      command = ExternalApps::getApplicationBin( TExternalApp::DIMEMAS_WRAPPER );
 
       parameters = doubleQuote( fileBrowserButtonTrace->GetPath() ); // Source trace
       parameters += wxString( wxT( " " ) ) + doubleQuote( fileBrowserButtonDimemasCFG->GetPath() ); // Dimemas cfg
@@ -1240,7 +1205,7 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
       break;
 
     case TExternalApp::DIMEMAS_GUI:
-      command = application[ TExternalApp::DIMEMAS_GUI ];
+      command = ExternalApps::getApplicationBin( TExternalApp::DIMEMAS_GUI );
       if ( !fileBrowserButtonDimemasCFG->GetPath().IsEmpty() )
         parameters = doubleQuote( fileBrowserButtonDimemasCFG->GetPath() );
 
@@ -1250,14 +1215,14 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
 
       if ( textCtrlDefaultParameters->GetValue() == wxString( wxT( "--help" ) ))
       {
-        command  = application[ TExternalApp::PRVSTATS_WRAPPER ];
+        command  = ExternalApps::getApplicationBin( TExternalApp::PRVSTATS_WRAPPER );
         parameters = textCtrlDefaultParameters->GetValue();
         helpOption = true;
       }
       else
       {
         // TODO: DEFAULT VALUES?
-        command  = application[ TExternalApp::PRVSTATS_WRAPPER ];
+        command  = ExternalApps::getApplicationBin( TExternalApp::PRVSTATS_WRAPPER );
 
         parameters = doubleQuote( fileBrowserButtonTrace->GetPath() ); // Source trace
         parameters += wxString( wxT( " -o " ) ) + doubleQuote( statsTextCtrlOutputName->GetValue() ); // Final name
@@ -1284,7 +1249,7 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
       break;
 
     case TExternalApp::CLUSTERING:
-      command = application[ TExternalApp::CLUSTERING ];
+      command = ExternalApps::getApplicationBin( TExternalApp::CLUSTERING );
 
       parameters = wxString( wxT( " -p" ) );
       
@@ -1386,7 +1351,7 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
       break;
 
     case TExternalApp::FOLDING:
-      command = application[ TExternalApp::FOLDING ];
+      command = ExternalApps::getApplicationBin( TExternalApp::FOLDING );
 
       // Flags
       if ( checkboxFoldingOnly->IsChecked() )
@@ -1427,7 +1392,7 @@ wxString RunScript::GetCommand( wxString &command, wxString &parameters, TExtern
       break;
 
     case TExternalApp::PROFET:
-      command = application[ TExternalApp::PROFET ];
+      command = ExternalApps::getApplicationBin( TExternalApp::PROFET );
 
       // Default flags:
       // -w: don't show warnings
@@ -1532,11 +1497,6 @@ wxString RunScript::GetReachableCommand( TExternalApp selectedApp )
   }
   else
   {
-    if ( selectedApp == TExternalApp::DEFAULT )
-    {
-      selectedApp = getSelectedApp();
-    }
-
     switch ( selectedApp )
     {
       case TExternalApp::DIMEMAS_GUI:
@@ -1625,7 +1585,7 @@ void RunScript::OnButtonRunClick( wxCommandEvent& event )
   helpOption = false;
   bool ready = true;
 
-  wxString readyCommand = GetReachableCommand();
+  wxString readyCommand = GetReachableCommand( getSelectedApp() );
   if ( !readyCommand.IsEmpty() )
   {
     if ( getSelectedApp() == TExternalApp::CLUSTERING )
@@ -1759,7 +1719,7 @@ void RunScript::AppendToLog( wxString msg, bool formatOutput )
     msg.AfterLast( ' ' ).BeforeFirst( '.' ).ToLong( &newValue );
 
     if( progressBar == nullptr )
-      progressBar = new wxProgressDialog( "Running", applicationLabel[ selectedApp ], 100, this );
+      progressBar = new wxProgressDialog( "Running", ExternalApps::getApplicationLabel( selectedApp ), 100, this );
 
     progressBar->Show();
     progressBar->Update( (int) newValue );
@@ -2057,12 +2017,12 @@ void RunScript::InitOutputLinks()
 
   defaultLinkMaker = makeLinkComponents;
 
-  applicationLinkMaker[ TExternalApp::DIMEMAS_WRAPPER ] = makeLinkComponents;
-  applicationLinkMaker[ TExternalApp::PRVSTATS_WRAPPER ]   = makeLinkComponents;
-  applicationLinkMaker[ TExternalApp::CLUSTERING ]      = makeLinkComponentsClustering;
-  applicationLinkMaker[ TExternalApp::FOLDING ]         = makeLinkComponentsFolding;
-  applicationLinkMaker[ TExternalApp::PROFET ]          = makeLinkComponents;
-  applicationLinkMaker[ TExternalApp::USER_COMMAND ]    = makeLinkComponents;
+  applicationLinkMaker[ TExternalApp::DIMEMAS_WRAPPER ]  = makeLinkComponents;
+  applicationLinkMaker[ TExternalApp::PRVSTATS_WRAPPER ] = makeLinkComponents;
+  applicationLinkMaker[ TExternalApp::CLUSTERING ]       = makeLinkComponentsClustering;
+  applicationLinkMaker[ TExternalApp::FOLDING ]          = makeLinkComponentsFolding;
+  applicationLinkMaker[ TExternalApp::PROFET ]           = makeLinkComponents;
+  applicationLinkMaker[ TExternalApp::USER_COMMAND ]     = makeLinkComponents;
   
   // These applications aren't executed by "Run" button, so will not generate links
   // applicationLinkMaker[ DIMEMAS_GUI ]     = makeLinkComponents;
@@ -2558,7 +2518,7 @@ void RunScript::OnButtonDimemasGuiUpdate( wxUpdateUIEvent& event )
 void RunScript::OnLabelcommandpreviewUpdate( wxUpdateUIEvent& event )
 {
   wxString dummyCommand, dummyParameter;
-  event.SetText( GetCommand( dummyCommand, dummyParameter ) );
+  event.SetText( GetCommand( dummyCommand, dummyParameter, getSelectedApp() ) );
 }
 
 

@@ -23,8 +23,6 @@
 
 #pragma once
 
-
-
 /*!
  * Includes
  */
@@ -37,11 +35,13 @@
 #include "wx/html/htmlwin.h"
 ////@end includes
 #include <wx/filename.h>
-
-#include <string>
-#include <map>
-
 #include <wx/process.h>
+
+#include <functional>
+#include <map>
+#include <string>
+
+#include "externalapps.h"
 
 class RunScript;
 
@@ -169,23 +169,6 @@ class wxHtmlWindow;
 #define SYMBOL_RUNSCRIPT_SIZE wxSize(600, -1)
 #define SYMBOL_RUNSCRIPT_POSITION wxDefaultPosition
 ////@end control identifiers
-
-enum class TExternalApp
-{
-  DEFAULT = -1,
-
-  // --- Called through choice selector widget --- 
-  DIMEMAS_WRAPPER,     // Dimemas      selected in choice widget
-  PRVSTATS_WRAPPER,    // prvstats        selected in choice widget
-  CLUSTERING,          // Clustering   selected in choice widget
-  FOLDING,             // Folding      selected in choice widget
-  PROFET,
-                        // <-- add new apps here at most
-  USER_COMMAND,        // User command selected in choice widget
-
-  // --- Called by different widget ---
-  DIMEMAS_GUI,         // DimemasGui   invoked through button
-};
 
 /*!
  * RunScript class declaration
@@ -452,11 +435,6 @@ private:
 
   TExternalApp currentApp;
 
-  // Application list: labels and names
-  std::map< TExternalApp, wxString > applicationLabel;
-  std::map< TExternalApp, wxString > application;
-  std::map< TExternalApp, wxString > applicationCheck;
-
   using TMakeLinkFunction = std::function< bool( const wxString&, const wxString&, wxString&, wxString& ) >;
   std::map< TExternalApp, TMakeLinkFunction > applicationLinkMaker;
   TMakeLinkFunction defaultLinkMaker;
@@ -503,8 +481,8 @@ private:
   wxString doubleQuote( const wxString& path );
   wxString expandVariables( wxString command );
 
-  wxString GetCommand( wxString &command, wxString &parameters, TExternalApp selectedApp = TExternalApp::DEFAULT );
-  wxString GetReachableCommand( TExternalApp selectedApp = TExternalApp::DEFAULT ); // adds path to the binary
+  wxString GetCommand( wxString &command, wxString &parameters, TExternalApp selectedApp );
+  wxString GetReachableCommand( TExternalApp selectedApp ); // adds path to the binary
 
   // Log related
   bool readFoldingTag( wxString rawLine );
