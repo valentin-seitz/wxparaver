@@ -613,13 +613,13 @@ gPopUpMenu<gTimeline>::gPopUpMenu( gTimeline *whichTimeline )
   AppendSeparator();
   
   buildItem( popUpMenuRun, _( "Cutter" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_CUTTER );
-  if( ExternalApps::existCommand( TExternalAppID::DIMEMAS ) )
+  if( ExternalApps::isSuitableAppForTrace( TExternalAppID::DIMEMAS, *window->GetMyWindow()->getTrace() ) )
     buildItem( popUpMenuRun, _( "Dimemas" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_DIMEMAS );
-  if( ExternalApps::existCommand( TExternalAppID::CLUSTERING ) )
+  if( ExternalApps::isSuitableAppForTrace( TExternalAppID::CLUSTERING, *window->GetMyWindow()->getTrace() ) )
     buildItem( popUpMenuRun, _( "Clustering" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_CLUSTERING );
-  if( ExternalApps::existCommand( TExternalAppID::FOLDING ) )
+  if( ExternalApps::isSuitableAppForTrace( TExternalAppID::FOLDING, *window->GetMyWindow()->getTrace() ) )
     buildItem( popUpMenuRun, _( "Folding" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_FOLDING );
-  if( ExternalApps::existCommand( TExternalAppID::PROFET ) )
+  if( ExternalApps::isSuitableAppForTrace( TExternalAppID::PROFET, *window->GetMyWindow()->getTrace() ) )
     buildItem( popUpMenuRun, _( "PROFET" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_PROFET );
   buildItem( popUpMenuRun, _( "User Command" ), wxITEM_NORMAL, &gTimeline::OnPopUpRunApp, ID_MENU_USER_COMMAND );
   AppendSubMenu( popUpMenuRun, _( "Run" ) );

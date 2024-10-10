@@ -24,7 +24,11 @@
 #include <wx/arrstr.h>
 #include <wx/utils.h> 
 
+#include <algorithm>
+
 #include "externalapps.h"
+
+#include "labelconstructor.h"
 
 // Labels to construct selector & warning dialogs
 const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationLabel = {
@@ -65,6 +69,18 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
   wxString( "DimemasGUI")        // DIMEMAS_GUI
 };
 
+// Events needed to execute application: for every app a vector of substrings that should be compared to trace events.
+const std::array< std::vector< std::string >, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationEvents = { {
+  { "MPI Point-to-point", "MPI Collective Comm", "CUDA library call", "Parallel (OMP)", "Executed OpenMP parallel function", "OpenMP barrier" }, // DIMEMAS
+  {}, // PRVSTATS
+  {}, // CLUSTERING
+  { "PAPI_" }, // FOLDING
+  { "UNC_M_CAS_COUNT" }, // PROFET
+  {}, // USER_COMMAND
+  {}, // DIMEMAS_GUI
+} };
+
+
 wxString ExternalApps::getApplicationLabel( TExternalAppID whichApp )
 {
   return ExternalApps::applicationLabel[ static_cast< int >( whichApp ) ];
@@ -89,4 +105,30 @@ bool ExternalApps::existCommand( const wxString& program )
 bool ExternalApps::existCommand( TExternalAppID programID )
 {
   return ExternalApps::existCommand( getApplicationCheckBin( programID ) );
+}
+
+bool ExternalApps::isSuitableAppForTrace( TExternalAppID programID, Trace& whichTrace )
+{
+  return ExternalApps::verifySuitableEvents( programID, whichTrace ) && ExternalApps::existCommand( programID );
+}
+
+bool ExternalApps::verifySuitableEvents( TExternalAppID programID, const Trace& whichTrace )
+{
+  const auto& appEventStrings = ExternalApps::applicationEvents[ static_cast< int >( programID ) ];
+
+  if( appEventStrings.empty() )
+    return true;
+
+  const auto& traceEvents = whichTrace.getLoadedEvents();
+
+  std::string strTraceEvent;
+  for( auto itTraceEvent = traceEvents.begin(); itTraceEvent != traceEvents.end(); ++itTraceEvent )
+  {
+    strTraceEvent.clear();
+    whichTrace.getEventLabels().getEventTypeLabel( *itTraceEvent, strTraceEvent );
+    if( std::any_of( appEventStrings.begin(), appEventStrings.end(), [&]( const auto& el ) { return el.find( strTraceEvent ) != std::string::npos; } ) )
+      return true;
+  }
+
+  return false;
 }
