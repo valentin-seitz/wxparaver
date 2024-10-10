@@ -28,7 +28,7 @@
 /*!
  * Includes
  */
- #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <wx/progdlg.h>
 #include "prvtypes.h"
@@ -281,6 +281,8 @@ public:
   void MousePanMotion();
   void MousePanLeftUp( wxMouseEvent& event );
   
+  void OnBackgroundAsZeroCheckClick( wxCommandEvent& event );
+
 ////@begin gTimeline member function declarations
 
   wxColour GetBackgroundColour() const { return backgroundColour ; }
@@ -379,8 +381,8 @@ public:
   wxPen GetPhysicalPen() const { return physicalPen ; }
   void SetPhysicalPen(wxPen value) { physicalPen = value ; }
 
-  bool GetRedoColors() const { return redoColors ; }
-  void SetRedoColors(bool value) { redoColors = value ; }
+  bool GetRedoColors() const { return redoColorsPanel ; }
+  void SetRedoColors(bool value) { redoColorsPanel = value ; }
 
   wxStopWatch * GetRedrawStopWatch() const { return redrawStopWatch ; }
   void SetRedrawStopWatch(wxStopWatch * value) { redrawStopWatch = value ; }
@@ -492,13 +494,13 @@ public:
   void drawRowColor( wxDC& dc, ValuesType valueToDraw, wxCoord objectPos, wxCoord timePos, float magnify );
 
   template<typename ValuesType>
-  void drawRowFunction( wxDC& dc, ValuesType valueToDraw, int& lineLastPos, wxCoord objectPos, wxCoord timePos, float magnify );
+  void drawRowFunction( wxDC& dc, ValuesType valueToDraw, int& semanticLastPos, wxCoord objectPos, wxCoord timePos, float magnify );
 
   template<typename ValuesType>
   void drawRowPunctual( wxDC& dc, ValuesType& valuesToDrawList, wxCoord objectPos, wxCoord timePos, float magnify );
 
   template<typename ValuesType>
-  void drawRowFusedLines( wxDC& dc, ValuesType valueToDraw, int& lineLastPos, TObjectOrder whichObject, wxCoord timePos, float magnify );
+  void drawRowFusedLines( wxDC& dc, ValuesType valueToDraw, int& semanticLastPos, wxCoord& timeLastPos, TObjectOrder whichObject, wxCoord timePos, bool isLastValue );
 
   void drawRowEvents( wxDC& eventdc, wxDC& eventmaskdc, TObjectOrder rowPos, std::unordered_set< PRV_INT32 >& eventsToDraw );
 #ifdef _MSC_VER
@@ -625,7 +627,6 @@ public:
   void OnPopUpTiming( wxCommandEvent& event );
   void EnableTiming( bool state );
   void OnItemColorLeftUp( wxMouseEvent& event );
-  void OnTextColorLeftUp( wxMouseEvent& event );
 
   void saveImage( wxString whichFileName = _( "" ), TImageFormat filterIndex =  TImageFormat::PNG );
   void saveImageLegend( wxString whichFileName = _( "" ),
@@ -715,7 +716,7 @@ private:
   int objectHeight;
   std::vector<PRV_INT32> objectPosList;
   wxPen physicalPen;
-  bool redoColors;
+  bool redoColorsPanel;
   wxStopWatch * redrawStopWatch;
   std::map< rgb, std::set<TSemanticValue> > semanticColorsToValue;
   wxFont semanticFont;
@@ -741,8 +742,26 @@ private:
   bool zooming;
 ////@end gTimeline member variables
 
+  class CustomColorSemValue : public wxObject
+  {
+    public:
+      enum class ColorType
+      {
+        BACKGROUND,
+        AXIS,
+        PUNCTUAL,
+        SEMANTIC_VALUE
+      };
+
+      ColorType myColorType;
+      TSemanticValue myValue;
+      wxPanel *myPanel;
+      wxStaticText *myText;
+      wxFont originalFont;
+  };
+
   // colorsPanel update info
-  bool forceRedoColors;
+  bool forceRedoColorsPanel;
   bool enableApplyButton;
   SemanticInfoType lastType;
   TSemanticValue lastMin;
@@ -750,8 +769,11 @@ private:
   size_t lastValuesSize;
   bool codeColorSet;
   TGradientFunction gradientFunc;
-  TSemanticValue selectedCustomValue;
-  wxPanel *selectedItemColor;
+  CustomColorSemValue* selectedCustomColor;
+  wxStaticText *lastSelectedItemText = nullptr;
+  wxFont originalUnselectectItemTextFont;
+  wxPanel *backgroundColorPanel = nullptr;
+  wxPanel *zeroColorPanel = nullptr;
 
   bool enabledAutoRedrawIcon;
 

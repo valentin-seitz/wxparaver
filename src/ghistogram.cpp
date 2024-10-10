@@ -870,12 +870,11 @@ void gHistogram::drawColumn( THistogramColumn beginColumn, THistogramColumn endC
                                 myHistogram->getControlMin();
 
       if( myHistogram->getControlWindow()->isCodeColorSet() )
-        tmpCol = controlWindow->getCodeColor().calcColor( tmpValue,
-                                                          myHistogram->getControlMin(),
-                                                          myHistogram->getControlMax(),
-                                                          controlWindow->getUseCustomPalette() );
+        tmpCol = controlWindow->getSemanticColor().calcColor( tmpValue,
+                                                              myHistogram->getControlMin(),
+                                                              myHistogram->getControlMax() );
       else
-        tmpCol = controlWindow->getGradientColor().calcColor( tmpValue,
+        tmpCol = controlWindow->getSemanticColor().calcColor( tmpValue,
                                                               controlWindow->getMinimumY(),
                                                               controlWindow->getMaximumY() );
       bufferDraw.SetBrush( wxBrush( wxColour( tmpCol.red, tmpCol.green, tmpCol.blue ) ) );
@@ -895,11 +894,11 @@ void gHistogram::drawColumn( THistogramColumn beginColumn, THistogramColumn endC
       bool tmpDrawColor = false;
       rgb tmpColorToDraw;
       TSemanticValue tmpValueToDraw = DrawMode::selectValue( valuesObjects, myHistogram->getDrawModeObjects() );
-      if( myHistogram->getColorMode() == TColorFunction::COLOR )
+      if( myHistogram->getColorMode() == TColorFunction::CODE_COLOR )
       {
-        tmpColorToDraw = myHistogram->getDataWindow()->getCodeColor().calcColor( tmpValueToDraw,
-                                                                                 myHistogram->getMinGradient(), myHistogram->getMaxGradient(),
-                                                                                 myHistogram->getDataWindow()->getUseCustomPalette() );
+        tmpColorToDraw = myHistogram->getDataWindow()->getSemanticColor().calcColor( tmpValueToDraw,
+                                                                                     myHistogram->getMinGradient(),
+                                                                                     myHistogram->getMaxGradient() );
         tmpDrawColor = true;
       }
       else
@@ -1557,7 +1556,7 @@ void gHistogram::OnPopUpColor2D( wxCommandEvent& event )
   switch( event.GetId() )
   {
     case ID_MENU_CODE_COLOR_2D:
-      myHistogram->setColorMode( TColorFunction::COLOR );
+      myHistogram->setColorMode( TColorFunction::CODE_COLOR );
       break;
     case ID_MENU_GRADIENT_COLOR_2D:
       myHistogram->setColorMode( TColorFunction::GRADIENT );
@@ -2182,7 +2181,7 @@ void gHistogram::OnTimerZoom( wxTimerEvent& event )
   {
     TSemanticValue value = getZoomSemanticValue( column - 1, row - 1, noVoidSemRanges );
     string tmpLabel;
-    if ( !myHistogram->getCodeColor() )
+    if ( !myHistogram->isCodeColorSet() )
     {
       tmpLabel =  LabelConstructor::histoCellLabel( myHistogram, value,  myHistogram->getShowUnits() );
     }
@@ -2715,7 +2714,7 @@ void gHistogram::openControlWindow( THistogramColumn columnBegin, THistogramColu
       
     productWin->setDrawModeObject( controlCloned->getDrawModeObject() );
     productWin->setDrawModeTime( controlCloned->getDrawModeTime() );
-    productWin->getGradientColor().setGradientFunction( controlCloned->getGradientColor().getGradientFunction() );
+    productWin->getSemanticColor().setGradientFunction( controlCloned->getSemanticColor().getGradientFunction() );
     productWin->setLevel( controlCloned->getLevel() );
     vector<bool> tmpSel;
     for( TTraceLevel level = TTraceLevel::APPLICATION; level <= TTraceLevel::THREAD; ++level )
@@ -2966,7 +2965,7 @@ void gHistogram::OnLabelLeftClick( wxGridEvent& event )
 
 void gHistogram::OnMenuGradientFunction( TGradientFunction function )
 {
-  myHistogram->getGradientColor().setGradientFunction( function );
+  myHistogram->getSemanticColor().setGradientFunction( function );
   myHistogram->setRedraw( true );
 }
 

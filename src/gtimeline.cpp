@@ -240,7 +240,7 @@ void gTimeline::Init()
   lastSemanticFoundTime = 0;
   myWindow = nullptr;
   objectHeight = 1;
-  redoColors = false;
+  redoColorsPanel = false;
   redrawStopWatch = new wxStopWatch();
   splitChanged = false;
   timerMotion = new wxTimer( this, ID_TIMER_MOTION );
@@ -308,7 +308,7 @@ void gTimeline::Init()
   whatWhereRow = 0;
   whatWhereSemantic = 0.0;
 
-  forceRedoColors = false;
+  forceRedoColorsPanel = false;
   enableApplyButton = false;
   lastType = NO_TYPE;
   lastMin = 0;
@@ -321,8 +321,7 @@ void gTimeline::Init()
   wheelZoomObjects = false;
 #endif
 
-  selectedItemColor = nullptr;
-  selectedCustomValue = 0;
+  selectedCustomColor = nullptr;
 
   enabledAutoRedrawIcon = false;
 }
@@ -610,7 +609,7 @@ void gTimeline::redraw()
   }
 #endif
   myWindow->setReady( false );
-  redoColors = true;
+  redoColorsPanel = true;
   enableApplyButton = false;
   enabledAutoRedrawIcon = false;
 
@@ -618,11 +617,11 @@ void gTimeline::redraw()
   semanticColorsToValue.clear();
   semanticPixelsToValue.clear();
 
-  rgb rgbForegroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis();
+  rgb rgbForegroundColour = myWindow->getAxisColor();
   foregroundColour = wxColour( rgbForegroundColour.red,
                                rgbForegroundColour.green,
                                rgbForegroundColour.blue );
-  rgb rgbBackgroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineBackground();
+  rgb rgbBackgroundColour = myWindow->getBackgroundColor();
   backgroundColour = wxColour( rgbBackgroundColour.red,
                                rgbBackgroundColour.green,
                                rgbBackgroundColour.blue );
@@ -911,7 +910,7 @@ bool gTimeline::drawAxis( wxDC& dc, vector<TObjectOrder>& selected )
   size_t numObjects = selected.size();
   float magnify = float( myWindow->getPixelSize() );
   
-  rgb rgbAxisColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis();
+  rgb rgbAxisColour = myWindow->getAxisColor();
   wxColour axisColour = wxColour( rgbAxisColour.red, rgbAxisColour.green ,rgbAxisColour.blue );
 
   dc.SetPen( wxPen( axisColour, 1 ) );
@@ -1188,7 +1187,7 @@ void gTimeline::drawZeroAxis( wxDC& dc, vector<TObjectOrder>& selected )
   {
     rgb rgbAxisColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineZeroDashLine();
     wxColour axisColour;
-    if( rgbAxisColour == ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis() )
+    if( rgbAxisColour == myWindow->getAxisColor() )
       axisColour = wxColour( rgbAxisColour.red - 1, rgbAxisColour.green ,rgbAxisColour.blue );
     else
       axisColour = wxColour( rgbAxisColour.red, rgbAxisColour.green ,rgbAxisColour.blue );
@@ -1197,7 +1196,7 @@ void gTimeline::drawZeroAxis( wxDC& dc, vector<TObjectOrder>& selected )
     TSemanticValue relativeZero = Normalizer::calculate( 0.0,
                                                          myWindow->getMinimumY(),
                                                          myWindow->getMaximumY(),
-                                                         GetMyWindow()->getGradientColor().getGradientFunction(), 
+                                                         GetMyWindow()->getSemanticColor().getGradientFunction(), 
                                                          true );
 
     if( myWindow->isFusedLinesColorSet() )
@@ -1247,7 +1246,7 @@ void gTimeline::drawRow( wxDC& dc,
   float magnify  = float( myWindow->getPixelSize() );
   if( myWindow->isPunctualColorSet() )
   {
-    rgb rgbPunctualColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelinePunctual();
+    rgb rgbPunctualColour = myWindow->getPunctualColor();
     wxColour punctualColor( rgbPunctualColour.red,
                             rgbPunctualColour.green,
                             rgbPunctualColour.blue );
@@ -1261,8 +1260,10 @@ void gTimeline::drawRow( wxDC& dc,
   else
     objectPos = objectPosList[ firstRow ];
   wxCoord timePos   = objectAxisPos + 1;
-  int lineLastPos   = 0;
+  wxCoord timeLastPos = timePos;
+  int semanticLastPos = 0;
 
+  auto itLast = --valuesToDraw.end();
   for( typename vector< ValuesType >::iterator it = valuesToDraw.begin(); it != valuesToDraw.end(); ++it )
   {
     if( myWindow->isPunctualColorSet() )
@@ -1278,11 +1279,11 @@ void gTimeline::drawRow( wxDC& dc,
     }
     else if( myWindow->isFunctionLineColorSet() )
     {
-      drawRowFunction( dc, *it, lineLastPos, objectPos, timePos, magnify );
+      drawRowFunction( dc, *it, semanticLastPos, objectPos, timePos, magnify );
     }
     else if( myWindow->isFusedLinesColorSet() )
     {
-      drawRowFusedLines( dc, *it, lineLastPos, firstRow, timePos, magnify );
+      drawRowFusedLines( dc, *it, semanticLastPos, timeLastPos, firstRow, timePos, it == itLast );
     }
 
     timePos += (int) magnify ;
@@ -1334,14 +1335,14 @@ void gTimeline::drawRowColor( wxDC& dc, TSemanticValue valueToDraw, wxCoord obje
 
 
 template<typename ValuesType>
-void gTimeline::drawRowFunction( wxDC& dc, ValuesType valueToDraw, int& lineLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
+void gTimeline::drawRowFunction( wxDC& dc, ValuesType valueToDraw, int& semanticLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
 {
   // Default implementation should not be called; only intended for compiling
   abort();
 }
 
 template<>
-void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& lineLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
+void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& semanticLastPos, wxCoord objectPos, wxCoord timePos, float magnify )
 {
   TSemanticValue realMin = myWindow->getMinimumY();
   
@@ -1356,16 +1357,16 @@ void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& line
   double normalizedSemanticValue = Normalizer::calculate( valueToDraw, 
                                                           myWindow->getMinimumY(),
                                                           myWindow->getMaximumY(),
-                                                          GetMyWindow()->getGradientColor().getGradientFunction(),
+                                                          GetMyWindow()->getSemanticColor().getGradientFunction(),
                                                           true );
   int currentPos = objectHeight * normalizedSemanticValue;
   semanticPixelsToValue[ currentPos ].insert( valueToDraw );
 
   dc.SetPen( foregroundColour );
-  if( currentPos != lineLastPos )
+  if( currentPos != semanticLastPos )
   {
-    int from = ( currentPos > lineLastPos ) ? currentPos : lineLastPos;
-    int to   = ( currentPos < lineLastPos ) ? currentPos : lineLastPos;
+    int from = ( currentPos > semanticLastPos ) ? currentPos : semanticLastPos;
+    int to   = ( currentPos < semanticLastPos ) ? currentPos : semanticLastPos;
     dc.DrawLine( timePos, objectPos + objectHeight - from,
                  timePos, objectPos + objectHeight - to + 1 );
     if( magnify > 1.0 )
@@ -1381,19 +1382,19 @@ void gTimeline::drawRowFunction( wxDC& dc, TSemanticValue valueToDraw, int& line
                    timePos + magnify, objectPos + objectHeight - currentPos ); 
   }
 
-  lineLastPos = currentPos;
+  semanticLastPos = currentPos;
 }
 
 
 template<typename ValuesType>
-void gTimeline::drawRowFusedLines( wxDC& dc, ValuesType valueToDraw, int& lineLastPos, TObjectOrder whichObject, wxCoord timePos, float magnify )
+void gTimeline::drawRowFusedLines( wxDC& dc, ValuesType valueToDraw, int& semanticLastPos, wxCoord& timeLastPos, TObjectOrder whichObject, wxCoord timePos, bool isLastValue )
 {
   // Default implementation should not be called; only intended for compiling
   abort();
 }
 
 template<>
-void gTimeline::drawRowFusedLines( wxDC& dc, TSemanticValue valueToDraw, int& lineLastPos, TObjectOrder whichObject, wxCoord timePos, float magnify )
+void gTimeline::drawRowFusedLines( wxDC& dc, TSemanticValue valueToDraw, int& semanticLastPos, wxCoord& timeLastPos, TObjectOrder whichObject, wxCoord timePos, bool isLastValue )
 {
   TSemanticValue realMin = myWindow->getMinimumY();
   
@@ -1409,29 +1410,36 @@ void gTimeline::drawRowFusedLines( wxDC& dc, TSemanticValue valueToDraw, int& li
                   / ( myWindow->getMaximumY() - realMin );
   int currentPos = ( timeAxisPos - drawBorder ) * tmpPos;
 
-  rgb colorToDraw = myWindow->getCodeColor().calcColor( whichObject + 1, 0, whichObject + 1, false );
+  // First value. It's no needed to draw a vertical line from 0.
+  if( timePos == objectAxisPos + 1 )
+    semanticLastPos = currentPos;
+
+  rgb colorToDraw = myWindow->getSemanticColor().calcColor( whichObject + 1, 0, whichObject + 1 );
   semanticColorsToValue[ colorToDraw ].insert( whichObject );
   dc.SetPen( wxPen( wxColour( colorToDraw.red, colorToDraw.green, colorToDraw.blue ) ) );
-  if( currentPos != lineLastPos )
+
+  auto drawLastHorizontalValue = [&]( wxCoord timeEndPos )
+    {
+      dc.DrawLine( timeLastPos, timeAxisPos - semanticLastPos,
+                   timeEndPos,  timeAxisPos - semanticLastPos );
+      timeLastPos = timePos;
+    };
+
+  if( currentPos != semanticLastPos )
   {
-    int from = ( currentPos > lineLastPos ) ? currentPos : lineLastPos;
-    int to   = ( currentPos < lineLastPos ) ? currentPos : lineLastPos;
+    drawLastHorizontalValue( timePos );
+
+    int from = ( currentPos > semanticLastPos ) ? currentPos : semanticLastPos;
+    int to   = ( currentPos < semanticLastPos ) ? currentPos : semanticLastPos;
     dc.DrawLine( timePos, timeAxisPos - from,
-                 timePos, timeAxisPos - to + 1 );
-    if( magnify > 1.0 )
-      dc.DrawLine( timePos,           timeAxisPos - currentPos,
-                   timePos + magnify, timeAxisPos - currentPos ); 
+                 timePos, timeAxisPos - to );
   }
-  else
+  else if( isLastValue )
   {
-    if ( magnify == 1.0 )
-      dc.DrawPoint( timePos, timeAxisPos - currentPos );
-    else
-      dc.DrawLine( timePos,           timeAxisPos - currentPos,
-                   timePos + magnify, timeAxisPos - currentPos ); 
+    drawLastHorizontalValue( dc.GetSize().GetWidth() - drawBorder );
   }
 
-  lineLastPos = currentPos;
+  semanticLastPos = currentPos;
 }
 
 
@@ -1461,7 +1469,7 @@ void gTimeline::drawRowPunctual( wxDC& dc, vector< pair<TSemanticValue,TSemantic
     double normalizedSemanticValue = Normalizer::calculate( valueToDraw,
                                                             myWindow->getMinimumY(),
                                                             myWindow->getMaximumY(),
-                                                            myWindow->getGradientColor().getGradientFunction(),
+                                                            myWindow->getSemanticColor().getGradientFunction(),
                                                             true );
     int currentPos = floor( ( (double)objectHeight / (double)magnify ) * normalizedSemanticValue ) * magnify;
     
@@ -2040,6 +2048,7 @@ gTimeline *gTimeline::clone( Timeline *clonedWindow,
   clonedTimeline->SetSemanticValuesToColor( semanticValuesToColor );
   clonedTimeline->SetSemanticColorsToValue( semanticColorsToValue );
   clonedTimeline->SetSemanticPixelsToValue( semanticPixelsToValue );
+  clonedTimeline->redoColorsPanel = true;
 
   clonedTimeline->myWindow->setReady( myWindow->getReady() );
   if( mustRedraw )
@@ -2138,6 +2147,7 @@ void gTimeline::OnPopUpFusedLinesColor( wxCommandEvent& event )
 
 void gTimeline::OnPopUpPunctualColor( wxCommandEvent& event )
 {
+  forceRedoColorsPanel = true;
   myWindow->setPunctualColorMode();
   myWindow->setRedraw( true );
 }
@@ -2181,6 +2191,7 @@ void gTimeline::OnPopUpPunctualColorWindow( wxCommandEvent& event )
 
 void gTimeline::OnPopUpCodeColor( wxCommandEvent& event )
 {
+  forceRedoColorsPanel = true;
   myWindow->setCodeColorMode();
   myWindow->setRedraw( true );
 }
@@ -2243,6 +2254,7 @@ void gTimeline::OnPopUpPasteSemanticScale( wxCommandEvent& event )
 void gTimeline::OnPopUpPasteCustomPalette( wxCommandEvent& event )
 {
   gPasteWindowProperties::getInstance()->paste( this, STR_CUSTOM_PALETTE );
+  forceRedoColorsPanel = true;
   myWindow->setRedraw( true );
 }
 
@@ -2323,18 +2335,21 @@ void gTimeline::OnPopUpRowSelection( wxCommandEvent& event )
 
 void gTimeline::OnPopUpGradientColor( wxCommandEvent& event )
 {
+  forceRedoColorsPanel = true;
   myWindow->setGradientColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::OnPopUpNotNullGradientColor( wxCommandEvent& event )
 {
+  forceRedoColorsPanel = true;
   myWindow->setNotNullGradientColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::OnPopUpAlternativeGradientColor( wxCommandEvent& event )
 {
+  forceRedoColorsPanel = true;
   myWindow->setAlternativeGradientColorMode();
   myWindow->setRedraw( true );
 }
@@ -2786,16 +2801,11 @@ void gTimeline::OnScrolledWindowMotion( wxMouseEvent& event )
   // PRV_UINT32 precision = ParaverConfig::getInstance()->getTimelinePrecision();
   PRV_UINT32 precision = 0;
 
-  rgb rgbForegroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineAxis();
+  rgb rgbForegroundColour = myWindow->getAxisColor();
   wxColour foregroundColour = wxColour( rgbForegroundColour.red,
-                                       rgbForegroundColour.green,
-                                       rgbForegroundColour.blue );
-  
-  rgb rgbBackgroundColour = ((paraverMain *)parent)->GetParaverConfig()->getColorsTimelineBackground();
-  wxColour backgroundColour = wxColour( rgbBackgroundColour.red,
-                                       rgbBackgroundColour.green,
-                                       rgbBackgroundColour.blue );
-  
+                                        rgbForegroundColour.green,
+                                        rgbForegroundColour.blue );
+
   TTime timeStep = ( myWindow->getWindowEndTime() - myWindow->getWindowBeginTime() ) /
                    ( bufferImage.GetWidth() - objectAxisPos - drawBorder );
 
@@ -3507,16 +3517,10 @@ void gTimeline::EnableTiming( bool state )
     drawZone->SetCursor( wxNullCursor  );
 }
 
-class CustomColorSemValue : public wxObject
-{
-  public:
-    TSemanticValue myValue;
-    wxPanel *myPanel;
-};
 
 void gTimeline::OnItemColorLeftUp( wxMouseEvent& event )
 {
-  selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
+  wxPanel *selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
   panelSelectedColor->SetBackgroundColour( selectedItemColor->GetBackgroundColour() );
   panelSelectedColor->Refresh();
   sliderSelectedRed->SetValue( selectedItemColor->GetBackgroundColour().Red() );
@@ -3526,22 +3530,14 @@ void gTimeline::OnItemColorLeftUp( wxMouseEvent& event )
   textSelectedGreen->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Green() ) );
   textSelectedBlue->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Blue() ) );
   
-  selectedCustomValue = ( (CustomColorSemValue *)event.m_callbackUserData )->myValue;
-}
+  selectedCustomColor = static_cast<CustomColorSemValue *>( event.m_callbackUserData );
 
-void gTimeline::OnTextColorLeftUp( wxMouseEvent& event )
-{
-  selectedItemColor = ( (CustomColorSemValue *)event.m_callbackUserData )->myPanel;
-  panelSelectedColor->SetBackgroundColour( selectedItemColor->GetBackgroundColour() );
-  panelSelectedColor->Refresh();
-  sliderSelectedRed->SetValue( selectedItemColor->GetBackgroundColour().Red() );
-  sliderSelectedGreen->SetValue( selectedItemColor->GetBackgroundColour().Green() );
-  sliderSelectedBlue->SetValue( selectedItemColor->GetBackgroundColour().Blue() );
-  textSelectedRed->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Red() ) );
-  textSelectedGreen->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Green() ) );
-  textSelectedBlue->ChangeValue( wxString::Format( wxT( "%i" ), selectedItemColor->GetBackgroundColour().Blue() ) );
-  
-  selectedCustomValue = ( (CustomColorSemValue *)event.m_callbackUserData )->myValue;
+  if( lastSelectedItemText != nullptr )
+    lastSelectedItemText->SetFont( originalUnselectectItemTextFont );
+  wxStaticText *selectedItemText = ( (CustomColorSemValue *)event.m_callbackUserData )->myText;
+  selectedItemText->SetFont( selectedItemText->GetFont().MakeBold() );
+  selectedItemText->GetParent()->Layout();
+  lastSelectedItemText = selectedItemText;
 }
 
 /*!
@@ -3555,14 +3551,14 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
 
   PRV_UINT32 precision = ParaverConfig::getInstance()->getTimelinePrecision();
   
-  if( forceRedoColors || 
-      ( redoColors &&
+  if( forceRedoColorsPanel || 
+      ( redoColorsPanel &&
         ( myWindow->getSemanticInfoType() != lastType ||
           myWindow->getMinimumY() != lastMin ||
           myWindow->getMaximumY() != lastMax ||
           semanticValuesToColor.size() != lastValuesSize ||
           myWindow->isCodeColorSet() != codeColorSet ||
-          myWindow->getGradientColor().getGradientFunction() != gradientFunc )
+          myWindow->getSemanticColor().getGradientFunction() != gradientFunc )
       ) 
     )
   {
@@ -3571,14 +3567,92 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     lastMax = myWindow->getMaximumY();
     lastValuesSize = semanticValuesToColor.size();
     codeColorSet = myWindow->isCodeColorSet();
-    gradientFunc = myWindow->getGradientColor().getGradientFunction();
+    gradientFunc = myWindow->getSemanticColor().getGradientFunction();
+
+    lastSelectedItemText = nullptr;
+    wxStaticText dummyText( colorsPanel, wxID_ANY, _T("") );
+    originalUnselectectItemTextFont = dummyText.GetFont();
+
+    backgroundColorPanel = nullptr;
+    zeroColorPanel = nullptr;
 
     colorsSizer->Clear( true );
     wxBoxSizer *itemSizer;
     wxStaticText *itemText;
     wxPanel *itemColor;
-    
-    if( myWindow->isFusedLinesColorSet() )
+
+    auto addItem = [ & ]( const wxString& whichLabel, const rgb& whichColor )
+    {
+      itemSizer = new wxBoxSizer(wxHORIZONTAL);
+
+      itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
+      itemText->SetLabel( whichLabel );
+
+      wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
+      itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
+      itemColor->SetBackgroundColour( { whichColor.red, whichColor.green, whichColor.blue } );
+
+      itemSizer->Add( itemColor );
+      itemSizer->AddSpacer( 5 );
+      itemSizer->Add( itemText, 1, wxGROW );
+      colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
+
+      return itemSizer;
+    };
+
+    auto addEventCallbacks = [ & ]( TSemanticValue whichValue, CustomColorSemValue::ColorType whichColorType )
+    {
+      CustomColorSemValue *tmpItemSemValue = new CustomColorSemValue();
+      tmpItemSemValue->myColorType = whichColorType;
+      tmpItemSemValue->myValue = whichValue;
+      tmpItemSemValue->myPanel = itemColor;
+      tmpItemSemValue->myText = itemText;
+      tmpItemSemValue->originalFont = itemText->GetFont();
+      CustomColorSemValue *tmpTextSemValue = new CustomColorSemValue();
+      *tmpTextSemValue = *tmpItemSemValue;
+      if ( checkboxCustomPalette->IsChecked() )
+      {
+        itemColor->Connect( itemColor->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnItemColorLeftUp), tmpItemSemValue, this);
+        itemText->Connect( itemText->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnItemColorLeftUp), tmpTextSemValue, this);
+      }
+    };
+
+    wxString tmpStr;
+    rgb tmprgb;
+
+    if ( checkboxCustomPalette->IsChecked() )
+    {
+      tmpStr = "Background";
+      tmprgb = myWindow->getBackgroundColor();
+      wxBoxSizer *itemSizer = addItem( tmpStr, tmprgb );
+      backgroundColorPanel = itemColor;
+      wxCheckBox *backgroundAsZeroCheck = new wxCheckBox( colorsPanel, wxID_ANY, "As zero" );
+      backgroundAsZeroCheck->SetValue( myWindow->getBackgroundAsZero() );
+      backgroundAsZeroCheck->Connect( backgroundAsZeroCheck->GetId(), wxEVT_CHECKBOX, wxCommandEventHandler(gTimeline::OnBackgroundAsZeroCheckClick), nullptr, this );
+      itemSizer->Add( backgroundAsZeroCheck );
+      addEventCallbacks( 0, CustomColorSemValue::ColorType::BACKGROUND );
+      colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
+
+      tmpStr.Clear();
+      if( myWindow->isFunctionLineColorSet() )
+        tmpStr = "Axis + Line";
+      else
+        tmpStr = "Axis";
+      tmprgb = myWindow->getAxisColor();
+      addItem( tmpStr, tmprgb );
+      addEventCallbacks( 0, CustomColorSemValue::ColorType::AXIS );
+      colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
+    }
+
+    if( myWindow->isPunctualColorSet() && checkboxCustomPalette->IsChecked() )
+    {
+      tmpStr.Clear();
+      tmpStr = "Punctual";
+      tmprgb = myWindow->getPunctualColor();
+      addItem( tmpStr, tmprgb );
+      addEventCallbacks( 0, CustomColorSemValue::ColorType::PUNCTUAL );
+    }
+    else if( myWindow->isFusedLinesColorSet() )
     {
       TObjectOrder beginRow = myWindow->getZoomSecondDimension().first;
       TObjectOrder endRow = myWindow->getZoomSecondDimension().second;
@@ -3588,25 +3662,15 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
       size_t i = 0;
       for( vector<TObjectOrder>::iterator it = selected.begin(); it != selected.end(); ++it )
       {
-        string tmpstr = LabelConstructor::objectLabel( *it, myWindow->getLevel(), myWindow->getTrace() );
+        if( i > MAX_LEGEND_COLORS )
+          break;
 
-        itemSizer = new wxBoxSizer(wxHORIZONTAL);
+        tmpStr.Clear();
+        tmpStr = wxString::FromUTF8( LabelConstructor::objectLabel( *it, myWindow->getLevel(), myWindow->getTrace() ).c_str() );
+        tmprgb = myWindow->getSemanticColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ) );
+        addItem( tmpStr, tmprgb );
+        addEventCallbacks( (*it) + 1, CustomColorSemValue::ColorType::SEMANTIC_VALUE );
 
-        itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
-        wxString tmpStr = wxString::FromUTF8( tmpstr.c_str() );
-        itemText->SetLabel( tmpStr );
-
-        wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
-        itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-        rgb tmprgb = myWindow->getCodeColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ), false );
-        wxColour tmpColor( tmprgb.red, tmprgb.green, tmprgb.blue );
-        itemColor->SetBackgroundColour( tmpColor );
-
-        itemSizer->Add( itemColor );
-        itemSizer->AddSpacer( 5 );
-        itemSizer->Add( itemText, 1, wxGROW );
-        colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
         if( i < selected.size() - 1 )
           colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
         ++i;
@@ -3616,78 +3680,38 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
     {
       int endLimit = 0;
 
-      for( auto it = semanticValuesToColor.cbegin(); it != semanticValuesToColor.cend(); ++it )
+      string tmpstr;
+      auto it = semanticValuesToColor.lower_bound( myWindow->getMinimumY() );
+      auto endIt = semanticValuesToColor.upper_bound( myWindow->getMaximumY() );
+      auto lastIt = endIt;
+      if( !semanticValuesToColor.empty() ) --lastIt;
+      for( ; it != endIt; ++it )
       {
-        int i = std::ceil( it->first );
-
-        if( lastType == EVENTTYPE_TYPE && !myWindow->getTrace()->eventLoaded( i ) )
-          continue;
-
-        string tmpstr;
-        if( lastType == STATE_TYPE &&
-            !myWindow->getTrace()->getStateLabels().getStateLabel( i, tmpstr ) )
-          continue;
-        if( lastType == EVENTVALUE_TYPE &&
-            !myWindow->getTrace()->getEventLabels().getEventValueLabel( i, tmpstr ) )
-          continue;
-
         if( endLimit > MAX_LEGEND_COLORS )
           break;
         else
           ++endLimit;
         
-        itemSizer = new wxBoxSizer(wxHORIZONTAL);
+        tmpStr.Clear();
+        tmpStr = wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, it->first, true, precision,false ).c_str() );
+        tmprgb = myWindow->getSemanticColor().calcColor( it->first, myWindow->getMinimumY(), myWindow->getMaximumY() );
+        addItem( tmpStr, tmprgb );
+        if( it->first == 0.0 )
+          zeroColorPanel = itemColor;
 
-        itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
-        wxString tmpStr = wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, i, true, precision,false ).c_str() );
-        itemText->SetLabel( tmpStr );
+        addEventCallbacks( it->first, CustomColorSemValue::ColorType::SEMANTIC_VALUE );
 
-        wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
-        itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-        rgb tmprgb = myWindow->getCodeColor().calcColor( i, myWindow->getMinimumY(), myWindow->getMaximumY(), myWindow->getUseCustomPalette() );
-        wxColour tmpColor( tmprgb.red, tmprgb.green, tmprgb.blue );
-        itemColor->SetBackgroundColour( tmpColor );
-
-        itemSizer->Add( itemColor );
-        itemSizer->AddSpacer( 5 );
-        itemSizer->Add( itemText, 1, wxGROW );
-        colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
-        CustomColorSemValue *tmpItemSemValue = new CustomColorSemValue();
-        tmpItemSemValue->myValue = i;
-        tmpItemSemValue->myPanel = itemColor;
-        CustomColorSemValue *tmpTextSemValue = new CustomColorSemValue();
-        *tmpTextSemValue = *tmpItemSemValue;
-        if ( checkboxCustomPalette->IsChecked() )
-        {
-          itemColor->Connect( itemColor->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnItemColorLeftUp), tmpItemSemValue, this);
-          itemText->Connect( itemText->GetId(), wxEVT_LEFT_UP, wxMouseEventHandler(gTimeline::OnTextColorLeftUp), tmpTextSemValue, this);
-        }
-
-        if( i < ceil( myWindow->getMaximumY() ) )
+        if( it != lastIt )
           colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
       }
     }
-    else
+    else if( myWindow->isGradientColorSet() || myWindow->isNotNullGradientColorSet() || myWindow->isAlternativeGradientColorSet() )
     {
-      itemSizer = new wxBoxSizer(wxHORIZONTAL);
-
-      itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
-      wxString tmpStr;
+      tmpStr.Clear();
       tmpStr << wxT("< ") << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, lastMin, false, precision, false ).c_str() );
-      itemText->SetLabel( tmpStr );
+      tmprgb = myWindow->getSemanticColor().calcColor( lastMin - 1, lastMin, lastMax );
+      addItem( tmpStr, tmprgb );
 
-      wxSize tmpSize( 20, itemText->GetSize().GetHeight() );
-      itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-      rgb tmprgb = myWindow->getGradientColor().calcColor( lastMin - 1, lastMin, lastMax );
-      wxColour tmpColor( tmprgb.red, tmprgb.green, tmprgb.blue );
-      itemColor->SetBackgroundColour( tmpColor );
-
-      itemSizer->Add( itemColor );
-      itemSizer->AddSpacer( 5 );
-      itemSizer->Add( itemText, 1, wxGROW );
-      colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
       colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
 
       TSemanticValue step = ( lastMax - lastMin ) / 20.0;
@@ -3703,52 +3727,33 @@ void gTimeline::OnScrolledColorsUpdate( wxUpdateUIEvent& event )
         else
           lastValueToUse = valueToUse = ( i * step ) + lastMin;
         
-        itemSizer = new wxBoxSizer(wxHORIZONTAL);
-
-        itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
         tmpStr.Clear();
         tmpStr << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, valueToUse, false, precision, false ).c_str() );
-        itemText->SetLabel( tmpStr );
+        tmprgb = myWindow->getSemanticColor().calcColor( valueToUse, lastMin, lastMax );
+        addItem( tmpStr, tmprgb );
 
-        tmpSize = wxSize( 20, itemText->GetSize().GetHeight() );
-        itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-        tmprgb = myWindow->getGradientColor().calcColor( valueToUse, lastMin, lastMax );
-        tmpColor = wxColour( tmprgb.red, tmprgb.green, tmprgb.blue );
-        itemColor->SetBackgroundColour( tmpColor );
+        if( myWindow->isNotNullGradientColorSet() && valueToUse == 0.0 )
+        {
+          zeroColorPanel = itemColor;
+          addEventCallbacks( valueToUse, CustomColorSemValue::ColorType::SEMANTIC_VALUE );
+        }
 
-        itemSizer->Add( itemColor );
-        itemSizer->AddSpacer( 5 );
-        itemSizer->Add( itemText );
-        colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
-      
         colorsSizer->Add( new wxStaticLine( colorsPanel, wxID_ANY ), 0, wxGROW|wxALL, 2 );
       }
-      itemSizer = new wxBoxSizer(wxHORIZONTAL);
 
-      itemText = new wxStaticText( colorsPanel, wxID_ANY, _T("") );
       tmpStr.Clear();
       tmpStr << wxT("> ") << wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, lastMax, false, precision, false ).c_str() );
-      itemText->SetLabel( tmpStr );
-
-      tmpSize = wxSize( 20, itemText->GetSize().GetHeight() );
-      itemColor = new wxPanel( colorsPanel, wxID_ANY, wxDefaultPosition, tmpSize );
-      tmprgb = myWindow->getGradientColor().calcColor( lastMax + 1, lastMin, lastMax );
-      tmpColor = wxColour( tmprgb.red, tmprgb.green, tmprgb.blue );
-      itemColor->SetBackgroundColour( tmpColor );
-
-      itemSizer->Add( itemColor );
-      itemSizer->AddSpacer( 5 );
-      itemSizer->Add( itemText );
-      colorsSizer->Add( itemSizer, 0, wxGROW|wxALL, 2 );
+      tmprgb = myWindow->getSemanticColor().calcColor( lastMax + 1, lastMin, lastMax );
+      addItem( tmpStr, tmprgb );
     }
     colorsPanel->Layout();
     colorsPanel->FitInside();
 
-    selectedItemColor = nullptr;
+    selectedCustomColor = nullptr;
     panelSelectedColor->Enable( false );
   }
-  forceRedoColors = false;
-  redoColors = false;
+  forceRedoColorsPanel = false;
+  redoColorsPanel = false;
 }
 
 
@@ -3804,12 +3809,14 @@ void gTimeline::drawEventFlags( bool draw )
 
 void gTimeline::drawFunctionLineColor()
 {
+  forceRedoColorsPanel = true;
   myWindow->setFunctionLineColorMode();
   myWindow->setRedraw( true );
 }
 
 void gTimeline::drawFusedLinesColor()
 {
+  forceRedoColorsPanel = true;
   myWindow->setFusedLinesColorMode();
   myWindow->setRedraw( true );
 }
@@ -4194,7 +4201,7 @@ void gTimeline::saveImageLegend( wxString whichFileName, TImageFormat filterInde
 
     for( vector<TObjectOrder>::iterator it = selected.begin(); it != selected.end(); ++it )
     {
-      rgb tmprgb = myWindow->getCodeColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ) - 1, false );
+      rgb tmprgb = myWindow->getSemanticColor().calcColor( (*it) + 1, 0, myWindow->getTrace()->getLevelObjects( myWindow->getLevel() ) - 1 );
       tmpObjects[ (TSemanticValue)(*it) ] = tmprgb;
     }
     tmpImage = new ScaleImageVerticalFusedLines( myWindow, tmpObjects,
@@ -4583,7 +4590,7 @@ void gTimeline::ScaleImageVerticalGradientColor::sortSemanticValues()
     if ( current > currentMax )
       current = currentMax;
 
-    semValues[ current ] = myWindow->getGradientColor().calcColor( current, currentMin, currentMax );
+    semValues[ current ] = myWindow->getSemanticColor().calcColor( current, currentMin, currentMax );
   }
 }
 
@@ -4591,7 +4598,7 @@ void gTimeline::ScaleImageVerticalGradientColor::sortSemanticValues()
 void gTimeline::ScaleImageVerticalGradientColor::draw()
 {
   // Bottom Outlier
-  rgb tmprgb = myWindow->getGradientColor().getBelowOutlierColor();
+  rgb tmprgb = myWindow->getSemanticColor().getBelowOutlierColor();
   wxString tmpSemanticValueLabel =
            wxT( "< " ) +
            wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, semValues.begin()->first, symbolicDesc, precision, false ).c_str() );
@@ -4606,7 +4613,7 @@ void gTimeline::ScaleImageVerticalGradientColor::draw()
   }
 
   // Top outlier
-  tmprgb = myWindow->getGradientColor().getAboveOutlierColor();
+  tmprgb = myWindow->getSemanticColor().getAboveOutlierColor();
   tmpSemanticValueLabel =
           wxT( "> " ) +
           wxString::FromUTF8( LabelConstructor::semanticLabel( myWindow, (--semValues.end())->first, symbolicDesc, precision, false ).c_str() );
@@ -4772,7 +4779,7 @@ void gTimeline::ScaleImageHorizontalGradientColor::draw()
   int initialXdst = xdst;
   
   // Bottom Outlier
-  rgb tmprgb = myWindow->getGradientColor().getBelowOutlierColor();
+  rgb tmprgb = myWindow->getSemanticColor().getBelowOutlierColor();
   drawRectangle( tmprgb );
   xdst += imageStepXRectangle + outlierMargin;
   
@@ -4796,7 +4803,7 @@ void gTimeline::ScaleImageHorizontalGradientColor::draw()
 
   // Top outlier
   xdst += outlierMargin;
-  tmprgb = myWindow->getGradientColor().getAboveOutlierColor();
+  tmprgb = myWindow->getSemanticColor().getAboveOutlierColor();
   drawRectangle( tmprgb );
   
   // *** 2. Draw labels **********************************************************************
@@ -5197,10 +5204,10 @@ void gTimeline::OnTimerMotion( wxTimerEvent& event )
       else if( winToUse->isColorOutlier( color ) )
       {
         // GRADIENT COLOR
-        if( color == winToUse->getGradientColor().getAboveOutlierColor() )
+        if( color == winToUse->getSemanticColor().getAboveOutlierColor() )
           label = wxT( "> " ) + wxString::FromUTF8( LabelConstructor::semanticLabel( winToUse, winToUse->getMaximumY(), false,
                                                                                       ParaverConfig::getInstance()->getTimelinePrecision(), false ).c_str() );
-        else if( color == winToUse->getGradientColor().getBelowOutlierColor() )
+        else if( color == winToUse->getSemanticColor().getBelowOutlierColor() )
           label = wxT( "< " ) + wxString::FromUTF8( LabelConstructor::semanticLabel( winToUse, winToUse->getMinimumY(), false,
                                                                                       ParaverConfig::getInstance()->getTimelinePrecision(), false ).c_str() );
         else
@@ -5357,7 +5364,7 @@ void gTimeline::OnCheckWhatWhere( wxCommandEvent& event )
 
 void gTimeline::OnMenuGradientFunction( TGradientFunction function )
 {
-  myWindow->getGradientColor().setGradientFunction( function );
+  myWindow->getSemanticColor().setGradientFunction( function );
   myWindow->setRedraw( true );
 }
 
@@ -6377,8 +6384,8 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   wxColor tmpColor( redColor, greenColor, blueColor );
   panelSelectedColor->SetBackgroundColour( tmpColor );
   panelSelectedColor->Refresh();
-  selectedItemColor->SetBackgroundColour( tmpColor );
-  selectedItemColor->Refresh();
+  selectedCustomColor->myPanel->SetBackgroundColour( tmpColor );
+  selectedCustomColor->myPanel->Refresh();
 
   textSelectedRed->ChangeValue( wxString::Format( wxT( "%i" ), redColor ) );
   textSelectedGreen->ChangeValue( wxString::Format( wxT( "%i" ), greenColor ) );
@@ -6388,7 +6395,36 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
   tmpRGBColor.red = redColor;
   tmpRGBColor.green = greenColor;
   tmpRGBColor.blue = blueColor;
-  myWindow->getCodeColor().setCustomColor( selectedCustomValue, tmpRGBColor );
+  if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::BACKGROUND )
+  {
+    myWindow->setCustomBackgroundColor( tmpRGBColor );
+    if( myWindow->getBackgroundAsZero() )
+    {
+      myWindow->getSemanticColor().setCustomColor( 0, tmpRGBColor );
+      if( zeroColorPanel )
+      {
+        zeroColorPanel->SetBackgroundColour( tmpColor );
+        zeroColorPanel->Refresh();
+      }
+    }
+  }
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::AXIS )
+    myWindow->setCustomAxisColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::PUNCTUAL )
+    myWindow->setCustomPunctualColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::SEMANTIC_VALUE )
+  {
+    myWindow->getSemanticColor().setCustomColor( selectedCustomColor->myValue, tmpRGBColor );
+    if( myWindow->getBackgroundAsZero() && selectedCustomColor->myValue == 0.0 )
+    {
+      myWindow->setCustomBackgroundColor( tmpRGBColor );
+      if( backgroundColorPanel )
+      {
+        backgroundColorPanel->SetBackgroundColour( tmpColor );
+        backgroundColorPanel->Refresh();
+      }
+    }
+  }
 
   enableApplyButton = true;
 }
@@ -6400,7 +6436,6 @@ void gTimeline::OnSliderSelectedColorUpdated( wxCommandEvent& event )
 
 void gTimeline::OnCheckboxCustomPaletteUpdate( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() );
   event.Check( myWindow->getUseCustomPalette() );
 }
 
@@ -6411,7 +6446,7 @@ void gTimeline::OnCheckboxCustomPaletteUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnStaticSelectedColorUpdate( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedItemColor != nullptr );
+  event.Enable( checkboxCustomPalette->IsChecked() && selectedCustomColor != nullptr );
 }
 
 
@@ -6421,7 +6456,7 @@ void gTimeline::OnStaticSelectedColorUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnSliderSelectedColorUpdateUI( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedItemColor != nullptr );
+  event.Enable( checkboxCustomPalette->IsChecked() && selectedCustomColor != nullptr );
 }
 
 
@@ -6432,20 +6467,21 @@ void gTimeline::OnSliderSelectedColorUpdateUI( wxUpdateUIEvent& event )
 void gTimeline::OnCheckboxCustomPaletteClick( wxCommandEvent& event )
 {
   myWindow->setUseCustomPalette( event.IsChecked() );
+
   if ( !event.IsChecked() )
   {
     enableApplyButton = false;
-    selectedItemColor = nullptr;
+    selectedCustomColor = nullptr;
     sliderSelectedRed->SetValue( 0 );
     sliderSelectedGreen->SetValue( 0 );
     sliderSelectedBlue->SetValue( 0 );
     panelSelectedColor->SetBackgroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) );
   }
 
-  if( myWindow->getCodeColor().existCustomColors() )
+  if( myWindow->existCustomColors() )
     myWindow->setForceRedraw( true );
 
-  forceRedoColors = true;
+  forceRedoColorsPanel = true;
 }
 
 
@@ -6477,7 +6513,7 @@ void gTimeline::OnButtonCustomPaletteApplyUpdate( wxUpdateUIEvent& event )
 
 void gTimeline::OnTextSelectedColorUpdate( wxUpdateUIEvent& event )
 {
-  event.Enable( myWindow->isCodeColorSet() && checkboxCustomPalette->IsChecked() && selectedItemColor != nullptr );
+  event.Enable( checkboxCustomPalette->IsChecked() && selectedCustomColor != nullptr );
 }
 
 
@@ -6498,8 +6534,8 @@ void gTimeline::OnTextSelectedColorUpdated( wxCommandEvent& event )
   wxColor tmpColor( redColor, greenColor, blueColor );
   panelSelectedColor->SetBackgroundColour( tmpColor );
   panelSelectedColor->Refresh();
-  selectedItemColor->SetBackgroundColour( tmpColor );
-  selectedItemColor->Refresh();
+  selectedCustomColor->myPanel->SetBackgroundColour( tmpColor );
+  selectedCustomColor->myPanel->Refresh();
 
   sliderSelectedRed->SetValue( redColor );
   sliderSelectedGreen->SetValue( greenColor );
@@ -6509,7 +6545,12 @@ void gTimeline::OnTextSelectedColorUpdated( wxCommandEvent& event )
   tmpRGBColor.red = redColor;
   tmpRGBColor.green = greenColor;
   tmpRGBColor.blue = blueColor;
-  myWindow->getCodeColor().setCustomColor( selectedCustomValue, tmpRGBColor );
+  if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::BACKGROUND )
+    myWindow->setCustomBackgroundColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::AXIS )
+    myWindow->setCustomAxisColor( tmpRGBColor );
+  else if( selectedCustomColor->myColorType == CustomColorSemValue::ColorType::SEMANTIC_VALUE )
+    myWindow->getSemanticColor().setCustomColor( selectedCustomColor->myValue, tmpRGBColor );
 
   enableApplyButton = true;
 }
@@ -6524,3 +6565,7 @@ void gTimeline::OnCheckWWShowDateUpdate( wxUpdateUIEvent& event )
   event.Enable( !myWindow->getTrace()->getTraceTime().is_not_a_date_time() );
 }
 
+void gTimeline::OnBackgroundAsZeroCheckClick( wxCommandEvent& event )
+{
+  myWindow->setBackgroundAsZero( event.IsChecked() );
+}

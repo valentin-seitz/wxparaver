@@ -3239,7 +3239,7 @@ void paraverMain::ShowDerivedDialog()
 
     newWindow->setDrawModeObject( beginDragWindow->getDrawModeObject() );
     newWindow->setDrawModeTime( beginDragWindow->getDrawModeTime() );
-    newWindow->getGradientColor().setGradientFunction( beginDragWindow->getGradientColor().getGradientFunction() );
+    newWindow->getSemanticColor().setGradientFunction( beginDragWindow->getSemanticColor().getGradientFunction() );
     newWindow->setLevel( beginDragWindow->getLevel() );
     vector<bool> tmpSel;
     for( TTraceLevel level = TTraceLevel::APPLICATION; level <= TTraceLevel::THREAD; ++level )
@@ -3780,10 +3780,10 @@ void paraverMain::ShowPreferences( wxWindowID whichPanelID )
     LoadedWindows::getInstance()->getAll( tmpWins );
     for( vector<Timeline *>::iterator it = tmpWins.begin(); it != tmpWins.end(); ++it )
     {
-      (*it)->getGradientColor().setBeginGradientColor( preferences.GetGradientColourBegin() );
-      (*it)->getGradientColor().setEndGradientColor( preferences.GetGradientColourEnd() );
-      (*it)->getGradientColor().setBelowOutlierColor( preferences.GetGradientColourLow() );
-      (*it)->getGradientColor().setAboveOutlierColor( preferences.GetGradientColourTop() );
+      (*it)->getSemanticColor().setBeginGradientColor( preferences.GetGradientColourBegin() );
+      (*it)->getSemanticColor().setEndGradientColor( preferences.GetGradientColourEnd() );
+      (*it)->getSemanticColor().setBelowOutlierColor( preferences.GetGradientColourLow() );
+      (*it)->getSemanticColor().setAboveOutlierColor( preferences.GetGradientColourTop() );
     }
 
     // FILTER

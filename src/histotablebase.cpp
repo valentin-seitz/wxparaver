@@ -342,12 +342,11 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
                                 myHisto->GetHistogram()->getControlMin();
       rgb tmpCol;
       if( controlWindow->isCodeColorSet() )
-        tmpCol = controlWindow->getCodeColor().calcColor( tmpValue,
-                                                          myHisto->GetHistogram()->getControlMin(),
-                                                          myHisto->GetHistogram()->getControlMax(),
-                                                          controlWindow->getUseCustomPalette() );
+        tmpCol = controlWindow->getSemanticColor().calcColor( tmpValue,
+                                                              myHisto->GetHistogram()->getControlMin(),
+                                                              myHisto->GetHistogram()->getControlMax() );
       else
-        tmpCol = controlWindow->getGradientColor().calcColor( tmpValue,
+        tmpCol = controlWindow->getSemanticColor().calcColor( tmpValue,
                                                               controlWindow->getMinimumY(),
                                                               controlWindow->getMaximumY() );
       tmpAttr->SetBackgroundColour( wxColour( tmpCol.red, tmpCol.green, tmpCol.blue ) );
@@ -372,12 +371,11 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
                                   myHisto->GetHistogram()->getControlMin();
         rgb tmpCol;
         if( controlWindow->isCodeColorSet() )
-          tmpCol = controlWindow->getCodeColor().calcColor( tmpValue,
-                                                            myHisto->GetHistogram()->getControlMin(),
-                                                            myHisto->GetHistogram()->getControlMax(),
-                                                            controlWindow->getUseCustomPalette() );
+          tmpCol = controlWindow->getSemanticColor().calcColor( tmpValue,
+                                                                myHisto->GetHistogram()->getControlMin(),
+                                                                myHisto->GetHistogram()->getControlMax() );
         else
-          tmpCol = controlWindow->getGradientColor().calcColor( tmpValue,
+          tmpCol = controlWindow->getSemanticColor().calcColor( tmpValue,
                                                                 controlWindow->getMinimumY(),
                                                                 controlWindow->getMaximumY() );
         tmpAttr->SetBackgroundColour( wxColour( tmpCol.red, tmpCol.green, tmpCol.blue ) );
@@ -422,12 +420,11 @@ wxGridCellAttr *HistoTableBase::GetAttr( int row, int col, wxGridCellAttr::wxAtt
       if( myHisto->GetHistogram()->getCellValue( semValue, row, col, idStat, myHisto->GetHistogram()->getSelectedPlane() ) && myHisto->GetHistogram()->getShowColor() )
       {
         rgb tmpCol;
-        if( myHisto->GetHistogram()->getColorMode() == TColorFunction::COLOR )
+        if( myHisto->GetHistogram()->getColorMode() == TColorFunction::CODE_COLOR )
         {
-          tmpCol = myHisto->GetHistogram()->getDataWindow()->getCodeColor().calcColor( semValue,
-                                                                       myHisto->GetHistogram()->getMinGradient(),
-                                                                       myHisto->GetHistogram()->getMaxGradient(),
-                                                                       myHisto->GetHistogram()->getDataWindow()->getUseCustomPalette() );
+          tmpCol = myHisto->GetHistogram()->getDataWindow()->getSemanticColor().calcColor( semValue,
+                                                                                           myHisto->GetHistogram()->getMinGradient(),
+                                                                                           myHisto->GetHistogram()->getMaxGradient() );
           tmpAttr->SetBackgroundColour( wxColour( tmpCol.red, tmpCol.green, tmpCol.blue ) );
           tmpAttr->SetTextColour( *getTextColorFromLuminance( tmpCol ) );
         }
