@@ -36,7 +36,7 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
   wxString( "prvstats" ),     //PRVSTATS
   wxString( "Clustering" ),   //CLUSTERING
   wxString( "Folding" ),      //FOLDING
-  wxString( "PROFET" ),       //PROFET
+  wxString( "Mess" ),         //PROFET
   wxString( "User command" ), //USER_COMMAND
 
   // Following only for warning dialogs
@@ -53,7 +53,7 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
 #endif
   wxString( "BurstClustering"),     // CLUSTERING
   wxString( "rri-auto"),            // FOLDING
-  wxString( "profet-prv"),          // PROFET
+  wxString( "mess-prv"),          // PROFET
   wxString( "" ),                   // USER_COMMAND
   wxString( "DimemasGUI")           // DIMEMAS_GUI
 };
@@ -64,7 +64,7 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
   wxString( "prvstats" ),        // PRVSTATS
   wxString( "BurstClustering" ), // CLUSTERING
   wxString( "rri-auto" ),        // FOLDING
-  wxString( "profet-prv" ),      // PROFET
+  wxString( "mess-prv" ),        // PROFET
   wxString( "" ),                // USER_COMMAND
   wxString( "DimemasGUI")        // DIMEMAS_GUI
 };
