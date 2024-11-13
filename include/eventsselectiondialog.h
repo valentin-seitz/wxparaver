@@ -175,7 +175,7 @@ class EventValuesInfoManager : public EventInfoManager
     EventValuesInfoManager( Timeline *whichWindow, Filter *whichFilter, TEventType whichType );
     virtual ~EventValuesInfoManager() {};
     
-    void init( TEventType whichType, bool keepSelected = false );
+    void init( TEventType whichType, bool typeValueOp, bool keepSelected = false );
     virtual void transferFrom( wxCheckListBox *whichList );
     bool isEmpty() const { return fullList.IsEmpty(); }
     bool insert( double whichValue, wxString whichLabel ); // Only values can be added

@@ -754,6 +754,7 @@ void EventsSelectionDialog::OnChoiceOperatorFunctionValuesSelected( wxCommandEve
 void EventsSelectionDialog::OnChoiceOperatorTypeValueSelected( wxCommandEvent& event )
 {
   changedOperatorTypeValue = HasChanged( choiceOperatorTypeValue, previousOperatorTypeValue );
+  UpdateChecklistboxValues( currentType, true );
 }
 
 
@@ -789,7 +790,7 @@ void EventsSelectionDialog::UpdateWidgetChecklistboxValues()
   wxArrayInt tmpGUISelected;
   int firstPos;
 
-  valuesHandler->getSelectedFromVisible( tmpVisible, dummyPosVisible,  dummyGlobalSelected, tmpGUISelected, firstPos );
+  valuesHandler->getSelectedFromVisible( tmpVisible, dummyPosVisible, dummyGlobalSelected, tmpGUISelected, firstPos );
 
   // Insert strings of visible values
   checkListSelectValues->Clear();
@@ -849,7 +850,7 @@ void EventsSelectionDialog::UpdateWidgetChecklistboxTypes()
 //          - checklist widget
 void EventsSelectionDialog::UpdateChecklistboxValues( TEventType whichType, bool keepSelected )
 {
-  valuesHandler->init( whichType, keepSelected );
+  valuesHandler->init( whichType, !(bool)GetIndexOperatorTypeValue(), keepSelected );
   UpdateWidgetChecklistboxValues();
 }
 
@@ -1311,8 +1312,10 @@ void EventValuesInfoManager::setAllVisible()
 }
 
 
-void EventValuesInfoManager::init( TEventType whichType, bool keepSelected )
+void EventValuesInfoManager::init( TEventType whichType, bool typeValueOp, bool keepSelected )
 {
+  currentType = whichType;
+
   fullList.Clear();
   labels.Clear();
   visible.Clear();
@@ -1341,7 +1344,7 @@ void EventValuesInfoManager::init( TEventType whichType, bool keepSelected )
   // 3) Are values in filter in fullList? Add them if missing
   for( unsigned int i = 0; i < selected.GetCount(); ++i )
   {
-    if ( fullList.Index( selected[ i ] ) == wxNOT_FOUND )
+    if ( fullList.Index( selected[ i ] ) == wxNOT_FOUND && typeValueOp != Filter::AND )
     {
       fullList.Add( selected[ i ] );
     }
