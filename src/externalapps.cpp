@@ -69,15 +69,80 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
   wxString( "DimemasGUI")        // DIMEMAS_GUI
 };
 
-// Events needed to execute application: for every app a vector of substrings that should be compared to trace events.
-const std::array< std::vector< std::string >, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationEvents = { {
-  { "MPI Point-to-point", "MPI Collective Comm", "CUDA library call", "Parallel (OMP)", "Executed OpenMP parallel function", "OpenMP barrier" }, // DIMEMAS
-  {}, // PRVSTATS
-  {}, // CLUSTERING
-  { "PAPI_" }, // FOLDING
-  { "UNC_M_CAS_COUNT" }, // PROFET
-  {}, // USER_COMMAND
-  {}, // DIMEMAS_GUI
+
+template< int NUM_LABELS >
+bool verifyEventLabels( const Trace& whichTrace, const std::set<TEventType>& whichTraceEvents, const std::array< std::string, NUM_LABELS >& whichEventLabels )
+{
+  if( whichEventLabels.empty() )
+    return true;
+
+  std::string strTraceEvent;
+  for( auto itTraceEvent = whichTraceEvents.begin(); itTraceEvent != whichTraceEvents.end(); ++itTraceEvent )
+  {
+    strTraceEvent.clear();
+    whichTrace.getEventLabels().getEventTypeLabel( *itTraceEvent, strTraceEvent );
+    if( std::any_of( whichEventLabels.begin(), whichEventLabels.end(), [&]( const auto& el ) { return strTraceEvent.find( el ) != std::string::npos; } ) )
+      return true;
+  }
+
+  return false;
+}
+
+
+bool verifyDimemas( const Trace& whichTrace )
+{
+  const auto& traceEvents = whichTrace.getLoadedEvents();
+  const std::array< std::string, 6 > dimemasLabels { "MPI Point-to-point",
+                                                     "MPI Collective Comm",
+                                                     "CUDA library call",
+                                                     "Parallel (OMP)",
+                                                     "Executed OpenMP parallel function",
+                                                     "OpenMP barrier" };
+
+  return verifyEventLabels<6>( whichTrace, traceEvents, dimemasLabels );
+}
+
+
+bool verifyFolding( const Trace& whichTrace )
+{
+  const auto& traceEvents = whichTrace.getLoadedEvents();
+  const std::array< std::string, 1 > foldingLabels { "PAPI_" };
+
+  return verifyEventLabels<1>( whichTrace, traceEvents, foldingLabels );
+}
+
+
+bool verifyProfet( const Trace& whichTrace )
+{
+  const auto& traceEvents = whichTrace.getLoadedEvents();
+  const std::array< std::string, 2 > profetReadLabels { "Read", "read" };
+
+  std::string strTraceEvent;
+  for( auto itTraceEvent = traceEvents.begin(); itTraceEvent != traceEvents.end(); ++itTraceEvent )
+  {
+    if( !( *itTraceEvent >= 40000000 && *itTraceEvent < 50000000 ) )
+      continue;
+    strTraceEvent.clear();
+    whichTrace.getEventLabels().getEventTypeLabel( *itTraceEvent, strTraceEvent );
+    if( std::any_of( profetReadLabels.begin(), profetReadLabels.end(), [&]( const auto& el ) { return strTraceEvent.find( el ) != std::string::npos; } ) )
+    {
+      if( strTraceEvent.find( "DRAM") )
+        return true;
+    }
+  }
+
+  return false;
+}
+
+
+const std::array< std::function< bool( const Trace& ) >, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationVerifyFunctions = { {
+  { verifyDimemas },  // DIMEMAS
+  {},                 // PRVSTATS
+  {},                 // CLUSTERING
+  { verifyFolding },  // FOLDING
+  { verifyProfet },   // PROFET
+  {},                 // USER_COMMAND
+  {},                 // DIMEMAS_GUI
 } };
 
 
@@ -107,28 +172,27 @@ bool ExternalApps::existCommand( TExternalAppID programID )
   return ExternalApps::existCommand( getApplicationCheckBin( programID ) );
 }
 
-bool ExternalApps::isSuitableAppForTrace( TExternalAppID programID, Trace& whichTrace )
+bool ExternalApps::isSuitableAppForTrace( TExternalAppID programID, const Trace& whichTrace )
 {
   return ExternalApps::verifySuitableEvents( programID, whichTrace ) && ExternalApps::existCommand( programID );
 }
 
 bool ExternalApps::verifySuitableEvents( TExternalAppID programID, const Trace& whichTrace )
 {
-  const auto& appEventStrings = ExternalApps::applicationEvents[ static_cast< int >( programID ) ];
+  const auto& appFunction = ExternalApps::applicationVerifyFunctions[ static_cast< int >( programID ) ];
 
-  if( appEventStrings.empty() )
-    return true;
+  if( appFunction )
+    return appFunction( whichTrace );
 
-  const auto& traceEvents = whichTrace.getLoadedEvents();
+  return true;
+}
 
-  std::string strTraceEvent;
-  for( auto itTraceEvent = traceEvents.begin(); itTraceEvent != traceEvents.end(); ++itTraceEvent )
-  {
-    strTraceEvent.clear();
-    whichTrace.getEventLabels().getEventTypeLabel( *itTraceEvent, strTraceEvent );
-    if( std::any_of( appEventStrings.begin(), appEventStrings.end(), [&]( const auto& el ) { return el.find( strTraceEvent ) != std::string::npos; } ) )
-      return true;
-  }
+std::vector< bool > ExternalApps::suitableAppsForTrace( const Trace& whichTrace )
+{
+  std::vector< bool > result;
 
-  return false;
+  for( size_t iApp = 0; iApp < (int)TExternalAppID::USER_COMMAND; ++iApp )
+    result.push_back( ExternalApps::isSuitableAppForTrace( (TExternalAppID)iApp, whichTrace ) );
+
+  return result;
 }

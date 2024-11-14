@@ -25,9 +25,12 @@
 
 #include <wx/string.h>
 #include <array>
+#include <vector>
 
 #include "paraverkerneltypes.h"
 #include "trace.h"
+
+class trace;
 
 enum class TExternalAppID
 {
@@ -58,7 +61,9 @@ class ExternalApps
     static bool existCommand( const wxString& program );
     static bool existCommand( TExternalAppID programID );
 
-    static bool isSuitableAppForTrace( TExternalAppID programID, Trace& whichTrace );
+    static bool isSuitableAppForTrace( TExternalAppID programID, const Trace& whichTrace );
+
+    static std::vector< bool > suitableAppsForTrace( const Trace& whichTrace );
 
   private:
     // Labels to construct selector & warning dialogs
@@ -70,8 +75,8 @@ class ExternalApps
     // Application binary check names
     static const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > applicationCheckBin;
 
-    // Events needed to execute application
-    static const std::array< std::vector< std::string >, (int)TExternalAppID::NUMBER_APPS > applicationEvents;
+    // Functions to verify if app is suitable for trace
+    static const std::array< std::function< bool( const Trace& ) >, (int)TExternalAppID::NUMBER_APPS > applicationVerifyFunctions;
 
     static bool verifySuitableEvents( TExternalAppID programID, const Trace& whichTrace );
 };

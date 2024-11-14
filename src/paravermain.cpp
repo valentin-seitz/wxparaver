@@ -72,6 +72,7 @@
 #include "runscript.h"
 #include "sessionselectiondialog.h"
 #include "traceinformationdialog.h"
+#include "externalapps.h"
 
 #include <wx/display.h>
 #include <wx/process.h>
@@ -952,6 +953,8 @@ bool paraverMain::DoLoadTrace( const string &path )
 
     traceLoadedBefore = true;
     tracePath = tmpFileName.GetPath();
+
+    tr->setSuitableApps( ExternalApps::suitableAppsForTrace( *tr ) );
   }
   catch( ParaverKernelException& ex )
   {
