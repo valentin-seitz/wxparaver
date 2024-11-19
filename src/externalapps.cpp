@@ -126,7 +126,7 @@ bool verifyProfet( const Trace& whichTrace )
     whichTrace.getEventLabels().getEventTypeLabel( *itTraceEvent, strTraceEvent );
     if( std::any_of( profetReadLabels.begin(), profetReadLabels.end(), [&]( const auto& el ) { return strTraceEvent.find( el ) != std::string::npos; } ) )
     {
-      if( strTraceEvent.find( "DRAM") )
+      if( strTraceEvent.find( "DRAM" ) != std::string::npos )
         return true;
     }
   }
