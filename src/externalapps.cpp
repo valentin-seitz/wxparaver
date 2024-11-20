@@ -91,6 +91,9 @@ bool verifyEventLabels( const Trace& whichTrace, const std::set<TEventType>& whi
 
 bool verifyDimemas( const Trace& whichTrace )
 {
+  if( whichTrace.totalApplications() > 1 )
+    return false;
+
   const auto& traceEvents = whichTrace.getLoadedEvents();
   const std::array< std::string, 6 > dimemasLabels { "MPI Point-to-point",
                                                      "MPI Collective Comm",
@@ -103,10 +106,16 @@ bool verifyDimemas( const Trace& whichTrace )
 }
 
 
+bool verifyClustering( const Trace& whichTrace )
+{
+  return whichTrace.totalApplications() == 1;
+}
+
+
 bool verifyFolding( const Trace& whichTrace )
 {
   const auto& traceEvents = whichTrace.getLoadedEvents();
-  const std::array< std::string, 1 > foldingLabels { "PAPI_" };
+  const std::array< std::string, 1 > foldingLabels { "Sampled functions" };
 
   return verifyEventLabels<1>( whichTrace, traceEvents, foldingLabels );
 }
@@ -136,13 +145,13 @@ bool verifyProfet( const Trace& whichTrace )
 
 
 const std::array< std::function< bool( const Trace& ) >, (int)TExternalAppID::NUMBER_APPS > ExternalApps::applicationVerifyFunctions = { {
-  { verifyDimemas },  // DIMEMAS
-  {},                 // PRVSTATS
-  {},                 // CLUSTERING
-  { verifyFolding },  // FOLDING
-  { verifyProfet },   // PROFET
-  {},                 // USER_COMMAND
-  {},                 // DIMEMAS_GUI
+  { verifyDimemas },    // DIMEMAS
+  {},                   // PRVSTATS
+  { verifyClustering }, // CLUSTERING
+  { verifyFolding },    // FOLDING
+  { verifyProfet },     // PROFET
+  {},                   // USER_COMMAND
+  {},                   // DIMEMAS_GUI
 } };
 
 
