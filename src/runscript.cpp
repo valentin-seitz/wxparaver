@@ -2555,7 +2555,17 @@ void RunScript::setTrace( wxString whichTrace )
 
 void RunScript::setApp( TExternalAppID whichApp )
 {
-  choiceApplication->Select( static_cast< int >( whichApp ) );
+  int tmpSelection = 0;
+  for( int i = 0; i < choiceApplication->GetCount(); ++i )
+  {
+    if( (long int)choiceApplication->GetClientData( i ) == static_cast< long int >( whichApp ) )
+    {
+      tmpSelection = i;
+      break;
+    }
+  }
+
+  choiceApplication->Select( tmpSelection );
   adaptWindowToApplicationSelection();
 }
 
