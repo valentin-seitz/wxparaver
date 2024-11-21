@@ -1865,7 +1865,7 @@ void RunScript::adaptWindowToApplicationSelection()
       if ( textCtrlProfetOutputTrace->IsEmpty() && !textCtrlTrace->IsEmpty() )
       {
         wxFileName tmpFilename = wxFileName( fileBrowserButtonTrace->GetPath() );
-        textCtrlProfetOutputTrace->SetValue( tmpFilename.GetName() + wxString( wxT( ".profet.prv" )));
+        textCtrlProfetOutputTrace->SetValue( tmpFilename.GetName() + wxString( wxT( ".mess.prv" )));
       }
       break;
 
