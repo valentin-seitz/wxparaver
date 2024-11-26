@@ -95,14 +95,16 @@ bool verifyDimemas( const Trace& whichTrace )
     return false;
 
   const auto& traceEvents = whichTrace.getLoadedEvents();
-  const std::array< std::string, 6 > dimemasLabels { "MPI Point-to-point",
-                                                     "MPI Collective Comm",
-                                                     "CUDA library call",
-                                                     "Parallel (OMP)",
-                                                     "Executed OpenMP parallel function",
-                                                     "OpenMP barrier" };
 
-  return verifyEventLabels<6>( whichTrace, traceEvents, dimemasLabels );
+  constexpr size_t DIMEMAS_LABELS_SIZE = 6;
+  const std::array< std::string, DIMEMAS_LABELS_SIZE > dimemasLabels { "MPI Point-to-point",
+                                                                       "MPI Collective Comm",
+                                                                       "CUDA library call",
+                                                                       "Parallel (OMP)",
+                                                                       "Executed OpenMP parallel function",
+                                                                       "OpenMP barrier" };
+
+  return verifyEventLabels< DIMEMAS_LABELS_SIZE >( whichTrace, traceEvents, dimemasLabels );
 }
 
 
@@ -115,16 +117,20 @@ bool verifyClustering( const Trace& whichTrace )
 bool verifyFolding( const Trace& whichTrace )
 {
   const auto& traceEvents = whichTrace.getLoadedEvents();
-  const std::array< std::string, 1 > foldingLabels { "Sampled functions" };
 
-  return verifyEventLabels<1>( whichTrace, traceEvents, foldingLabels );
+  constexpr size_t FOLDING_LABELS_SIZE = 1;
+  const std::array< std::string, FOLDING_LABELS_SIZE > foldingLabels { "Sampled functions" };
+
+  return verifyEventLabels< FOLDING_LABELS_SIZE >( whichTrace, traceEvents, foldingLabels );
 }
 
 
 bool verifyProfet( const Trace& whichTrace )
 {
   const auto& traceEvents = whichTrace.getLoadedEvents();
-  const std::array< std::string, 2 > profetReadLabels { "Read", "read" };
+
+  constexpr size_t PROFET_LABELS_SIZE = 2;
+  const std::array< std::string, PROFET_LABELS_SIZE > profetReadLabels { "Read", "read" };
 
   std::string strTraceEvent;
   for( auto itTraceEvent = traceEvents.begin(); itTraceEvent != traceEvents.end(); ++itTraceEvent )

@@ -68,7 +68,8 @@ bool RunAppClusteringAction::execute( std::string whichTrace )
   RunScript *runAppDialog = wxparaverApp::mainWindow->GetRunApplication();
   if( runAppDialog == nullptr )
   {
-    runAppDialog = new RunScript( wxparaverApp::mainWindow );
+    std::vector<bool> tmpAcceptableApps = ( ( AcceptableAppsState * )tmpSequence->getState( TSequenceStates::acceptableAppsState ) )->getData();
+    runAppDialog = new RunScript( wxparaverApp::mainWindow, tmpAcceptableApps );
     wxparaverApp::mainWindow->SetRunApplication( runAppDialog );
   }
   runAppDialog->setTrace( wxString::FromUTF8( whichTrace.c_str() ) );
@@ -99,7 +100,8 @@ bool RunAppFoldingAction::execute( std::string whichTrace )
   RunScript *runAppDialog = wxparaverApp::mainWindow->GetRunApplication();
   if( runAppDialog == nullptr )
   {
-    runAppDialog = new RunScript( wxparaverApp::mainWindow );
+    std::vector<bool> tmpAcceptableApps = ( ( AcceptableAppsState * )tmpSequence->getState( TSequenceStates::acceptableAppsState ) )->getData();
+    runAppDialog = new RunScript( wxparaverApp::mainWindow, tmpAcceptableApps );
     wxparaverApp::mainWindow->SetRunApplication( runAppDialog );
   }
   runAppDialog->setTrace( wxString::FromUTF8( whichTrace.c_str() ) );
@@ -125,11 +127,12 @@ bool RunAppDimemasAction::execute( std::string whichTrace )
 {
   bool errorFound = false;
 
-  //TraceEditSequence *tmpSequence = (TraceEditSequence *)mySequence;
+  TraceEditSequence *tmpSequence = (TraceEditSequence *)mySequence;
   RunScript *runAppDialog = wxparaverApp::mainWindow->GetRunApplication();
   if( runAppDialog == nullptr )
   {
-    runAppDialog = new RunScript( wxparaverApp::mainWindow );
+    std::vector<bool> tmpAcceptableApps = ( ( AcceptableAppsState * )tmpSequence->getState( TSequenceStates::acceptableAppsState ) )->getData();
+    runAppDialog = new RunScript( wxparaverApp::mainWindow, tmpAcceptableApps );
     wxparaverApp::mainWindow->SetRunApplication( runAppDialog );
   }
   runAppDialog->setTrace( wxString::FromUTF8( whichTrace.c_str() ) );
@@ -186,11 +189,12 @@ bool RunProfetAction::execute( std::string whichTrace )
 {
   bool errorFound = false;
 
-  //TraceEditSequence *tmpSequence = (TraceEditSequence *)mySequence;
+  TraceEditSequence *tmpSequence = (TraceEditSequence *)mySequence;
   RunScript *runAppDialog = wxparaverApp::mainWindow->GetRunApplication();
   if( runAppDialog == nullptr )
   {
-    runAppDialog = new RunScript( wxparaverApp::mainWindow );
+    std::vector<bool> tmpAcceptableApps = ( ( AcceptableAppsState * )tmpSequence->getState( TSequenceStates::acceptableAppsState ) )->getData();
+    runAppDialog = new RunScript( wxparaverApp::mainWindow, tmpAcceptableApps );
     wxparaverApp::mainWindow->SetRunApplication( runAppDialog );
   }
   runAppDialog->setTrace( wxString::FromUTF8( whichTrace.c_str() ) );
@@ -236,11 +240,12 @@ bool RunAppUserCommandAction::execute( std::string whichTrace )
 {
   bool errorFound = false;
 
-  //TraceEditSequence *tmpSequence = (TraceEditSequence *)mySequence;
+  TraceEditSequence *tmpSequence = (TraceEditSequence *)mySequence;
   RunScript *runAppDialog = wxparaverApp::mainWindow->GetRunApplication();
   if( runAppDialog == nullptr )
   {
-    runAppDialog = new RunScript( wxparaverApp::mainWindow );
+    std::vector<bool> tmpAcceptableApps = ( ( AcceptableAppsState * )tmpSequence->getState( TSequenceStates::acceptableAppsState ) )->getData();
+    runAppDialog = new RunScript( wxparaverApp::mainWindow, tmpAcceptableApps );
     wxparaverApp::mainWindow->SetRunApplication( runAppDialog );
   }
   runAppDialog->setTrace( wxString::FromUTF8( whichTrace.c_str() ) );
@@ -265,6 +270,10 @@ void SequenceDriver::sequenceClustering( gTimeline *whichTimeline )
   mySequence->pushbackAction( TSequenceActions::traceCutterAction );
   mySequence->pushbackAction( new RunAppClusteringAction( mySequence ) );
   
+  AcceptableAppsState *tmpAcceptableAppsState = new AcceptableAppsState( mySequence );
+  tmpAcceptableAppsState->setData( whichTimeline->GetMyWindow()->getTrace()->getSuitableApps() );
+  mySequence->addState( TSequenceStates::acceptableAppsState, tmpAcceptableAppsState );
+
   TraceOptions *tmpOptions = TraceOptions::create( myKernel );
   tmpOptions->set_by_time( true );
   tmpOptions->set_min_cutting_time( whichTimeline->GetMyWindow()->getWindowBeginTime() );
@@ -349,6 +358,10 @@ void SequenceDriver::sequenceDimemas( gTimeline *whichTimeline )
   mySequence->pushbackAction( TSequenceActions::traceCutterAction );
   mySequence->pushbackAction( new RunAppDimemasAction( mySequence ) );
   
+  AcceptableAppsState *tmpAcceptableAppsState = new AcceptableAppsState( mySequence );
+  tmpAcceptableAppsState->setData( whichTimeline->GetMyWindow()->getTrace()->getSuitableApps() );
+  mySequence->addState( TSequenceStates::acceptableAppsState, tmpAcceptableAppsState );
+
   TraceOptions *tmpOptions = TraceOptions::create( myKernel );
   tmpOptions->set_by_time( true );
   tmpOptions->set_min_cutting_time( whichTimeline->GetMyWindow()->getWindowBeginTime() );
@@ -393,6 +406,10 @@ void SequenceDriver::sequenceFolding( gTimeline *whichTimeline )
   mySequence->pushbackAction( TSequenceActions::traceCutterAction );
   mySequence->pushbackAction( new RunAppFoldingAction( mySequence ) );
   
+  AcceptableAppsState *tmpAcceptableAppsState = new AcceptableAppsState( mySequence );
+  tmpAcceptableAppsState->setData( whichTimeline->GetMyWindow()->getTrace()->getSuitableApps() );
+  mySequence->addState( TSequenceStates::acceptableAppsState, tmpAcceptableAppsState );
+
   TraceOptions *tmpOptions = TraceOptions::create( myKernel );
   tmpOptions->set_by_time( true );
   tmpOptions->set_min_cutting_time( whichTimeline->GetMyWindow()->getWindowBeginTime() );
@@ -453,6 +470,10 @@ void SequenceDriver::sequenceProfet( gTimeline *whichTimeline )
   mySequence->pushbackAction( TSequenceActions::traceCutterAction );
   mySequence->pushbackAction( new RunProfetAction( mySequence ) );
 
+  AcceptableAppsState *tmpAcceptableAppsState = new AcceptableAppsState( mySequence );
+  tmpAcceptableAppsState->setData( whichTimeline->GetMyWindow()->getTrace()->getSuitableApps() );
+  mySequence->addState( TSequenceStates::acceptableAppsState, tmpAcceptableAppsState );
+
   // Trace options state
   TraceOptions *tmpOptions = TraceOptions::create( myKernel );
   tmpOptions->set_by_time( true );
@@ -502,6 +523,10 @@ void SequenceDriver::sequenceUserCommand( gTimeline *whichTimeline )
   mySequence->pushbackAction( TSequenceActions::traceCutterAction );
   mySequence->pushbackAction( new RunAppUserCommandAction( mySequence ) );
   
+  AcceptableAppsState *tmpAcceptableAppsState = new AcceptableAppsState( mySequence );
+  tmpAcceptableAppsState->setData( whichTimeline->GetMyWindow()->getTrace()->getSuitableApps() );
+  mySequence->addState( TSequenceStates::acceptableAppsState, tmpAcceptableAppsState );
+
   TraceOptions *tmpOptions = TraceOptions::create( myKernel );
   tmpOptions->set_by_time( true );
   tmpOptions->set_min_cutting_time( whichTimeline->GetMyWindow()->getWindowBeginTime() );

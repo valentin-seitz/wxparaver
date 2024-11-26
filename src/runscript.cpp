@@ -50,10 +50,11 @@
 #include <wx/arrstr.h>
 #include <wx/validate.h>
 
-#include <vector>
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <regex>
+#include <vector>
 
 #include "wxparaverapp.h"
 #include "runscript.h"
@@ -202,19 +203,29 @@ RunScript::RunScript()
 }
 
 
-RunScript::RunScript( wxWindow* parent, wxWindowID id, const wxString& caption, const wxPoint& pos, const wxSize& size, long style )
+RunScript::RunScript( wxWindow* parent,
+                      std::vector<bool> whichAcceptableApps,
+                      wxWindowID id,
+                      const wxString& caption,
+                      const wxPoint& pos,
+                      const wxSize& size,
+                      long style )
 {
   Init();
-  Create(parent, id, caption, pos, size, style);
+  Create(parent, whichAcceptableApps, id, caption, pos, size, style);
 }
 
 
 RunScript::RunScript( wxWindow* parent,
                       wxString whichTrace,
-                      wxWindowID id, const wxString& caption, const wxPoint& pos, const wxSize& size, long style )
+                      wxWindowID id,
+                      const wxString& caption,
+                      const wxPoint& pos,
+                      const wxSize& size,
+                      long style )
 {
   Init();
-  Create(parent, id, caption, pos, size, style);
+  Create(parent, {}, id, caption, pos, size, style);
   
   if ( !whichTrace.IsEmpty() )
   {
@@ -228,13 +239,19 @@ RunScript::RunScript( wxWindow* parent,
 /*!
  * RunScript creator
  */
-bool RunScript::Create( wxWindow* parent, wxWindowID id, const wxString& caption, const wxPoint& pos, const wxSize& size, long style )
+bool RunScript::Create( wxWindow* parent,
+                        std::vector<bool> whichAcceptableApps,
+                        wxWindowID id,
+                        const wxString& caption,
+                        const wxPoint& pos,
+                        const wxSize& size,
+                        long style )
 {
 ////@begin RunScript creation
   SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
   wxDialog::Create( parent, id, caption, pos, size, style );
 
-  CreateControls();
+  CreateControls( whichAcceptableApps );
   if (GetSizer())
   {
     GetSizer()->SetSizeHints(this);
@@ -430,7 +447,7 @@ wxString RunScript::getEnvironmentPath( TEnvironmentVar envVar, wxString command
 /*!
  * Control creation for RunScript
  */
-void RunScript::CreateControls()
+void RunScript::CreateControls( std::vector<bool> whichAcceptableApps )
 {    
 ////@begin RunScript content construction
   RunScript* itemDialog1 = this;
@@ -1020,15 +1037,23 @@ void RunScript::CreateControls()
 ////@end RunScript content construction
   listboxRunLog->ShowScrollbars( wxSHOW_SB_ALWAYS, wxSHOW_SB_ALWAYS );
 
-  for ( long int i = static_cast<long int>( TExternalAppID::DIMEMAS ); i < static_cast<long int>( TExternalAppID::USER_COMMAND ); ++i )
+  auto addChoiceApps = [&]( std::function< bool( long int ) > appFunc )
   {
-    if ( appIsFound[ i ] = ExternalApps::existCommand( TExternalAppID( i ) ) )
+    for ( long int i = static_cast<long int>( TExternalAppID::DIMEMAS ); i < static_cast<long int>( TExternalAppID::USER_COMMAND ); ++i )
     {
-      choiceApplication->Append( ExternalApps::getApplicationLabel( TExternalAppID( i ) ), (void *)i );
+      if ( appIsFound[ i ] = appFunc( i ) )
+      {
+        choiceApplication->Append( ExternalApps::getApplicationLabel( TExternalAppID( i ) ), (void *)i );
+      }
     }
-  }
-  choiceApplication->Append( ExternalApps::getApplicationLabel( TExternalAppID::USER_COMMAND ), (void *)TExternalAppID::USER_COMMAND );
-  appIsFound[ static_cast<int>( TExternalAppID::USER_COMMAND ) ] = true;
+    choiceApplication->Append( ExternalApps::getApplicationLabel( TExternalAppID::USER_COMMAND ), (void *)TExternalAppID::USER_COMMAND );
+    appIsFound[ static_cast<int>( TExternalAppID::USER_COMMAND ) ] = true;
+  };
+
+  if( whichAcceptableApps.empty() )
+    addChoiceApps( [&]( long int i ) { return ExternalApps::existCommand( TExternalAppID( i ) ); } );
+  else
+    addChoiceApps( [&]( long int i ) { return whichAcceptableApps[ i ]; } );
 
   // Trace browser
   fileBrowserButtonTrace->SetTextBox( textCtrlTrace );

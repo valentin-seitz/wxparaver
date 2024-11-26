@@ -205,13 +205,28 @@ public:
   /// Constructors
   RunScript();
   RunScript( wxWindow* parent,
-             wxWindowID id = SYMBOL_RUNSCRIPT_IDNAME, const wxString& caption = SYMBOL_RUNSCRIPT_TITLE, const wxPoint& pos = SYMBOL_RUNSCRIPT_POSITION, const wxSize& size = SYMBOL_RUNSCRIPT_SIZE, long style = SYMBOL_RUNSCRIPT_STYLE );
+             std::vector<bool> whichAcceptableApps,
+             wxWindowID id = SYMBOL_RUNSCRIPT_IDNAME,
+             const wxString& caption = SYMBOL_RUNSCRIPT_TITLE,
+             const wxPoint& pos = SYMBOL_RUNSCRIPT_POSITION,
+             const wxSize& size = SYMBOL_RUNSCRIPT_SIZE,
+             long style = SYMBOL_RUNSCRIPT_STYLE );
   RunScript( wxWindow* parent,
              wxString whichTrace,
-             wxWindowID id = SYMBOL_RUNSCRIPT_IDNAME, const wxString& caption = SYMBOL_RUNSCRIPT_TITLE, const wxPoint& pos = SYMBOL_RUNSCRIPT_POSITION, const wxSize& size = SYMBOL_RUNSCRIPT_SIZE, long style = SYMBOL_RUNSCRIPT_STYLE );
+             wxWindowID id = SYMBOL_RUNSCRIPT_IDNAME,
+             const wxString& caption = SYMBOL_RUNSCRIPT_TITLE,
+             const wxPoint& pos = SYMBOL_RUNSCRIPT_POSITION,
+             const wxSize& size = SYMBOL_RUNSCRIPT_SIZE,
+             long style = SYMBOL_RUNSCRIPT_STYLE );
 
   /// Creation
-  bool Create( wxWindow* parent, wxWindowID id = SYMBOL_RUNSCRIPT_IDNAME, const wxString& caption = SYMBOL_RUNSCRIPT_TITLE, const wxPoint& pos = SYMBOL_RUNSCRIPT_POSITION, const wxSize& size = SYMBOL_RUNSCRIPT_SIZE, long style = SYMBOL_RUNSCRIPT_STYLE );
+  bool Create( wxWindow* parent,
+              std::vector<bool> whichAcceptableApps,
+               wxWindowID id = SYMBOL_RUNSCRIPT_IDNAME,
+               const wxString& caption = SYMBOL_RUNSCRIPT_TITLE,
+               const wxPoint& pos = SYMBOL_RUNSCRIPT_POSITION,
+               const wxSize& size = SYMBOL_RUNSCRIPT_SIZE,
+               long style = SYMBOL_RUNSCRIPT_STYLE );
 
   /// Destructor
   ~RunScript();
@@ -221,7 +236,7 @@ public:
   void Init();
 
   /// Creates the controls and sizers
-  void CreateControls();
+  void CreateControls( std::vector<bool> whichAcceptableApps );
 
 ////@begin RunScript event handler declarations
 
