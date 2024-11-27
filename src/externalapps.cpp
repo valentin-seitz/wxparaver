@@ -25,6 +25,7 @@
 #include <wx/utils.h> 
 
 #include <algorithm>
+#include <set>
 
 #include "externalapps.h"
 
@@ -70,8 +71,8 @@ const std::array< wxString, (int)TExternalAppID::NUMBER_APPS > ExternalApps::app
 };
 
 
-template< int NUM_LABELS >
-bool verifyEventLabels( const Trace& whichTrace, const std::set<TEventType>& whichTraceEvents, const std::array< std::string, NUM_LABELS >& whichEventLabels )
+template< typename C >
+bool verifyEventLabels( const Trace& whichTrace, const std::set<TEventType>& whichTraceEvents, const C& whichEventLabels )
 {
   if( whichEventLabels.empty() )
     return true;
@@ -104,7 +105,7 @@ bool verifyDimemas( const Trace& whichTrace )
                                                                        "Executed OpenMP parallel function",
                                                                        "OpenMP barrier" };
 
-  return verifyEventLabels< DIMEMAS_LABELS_SIZE >( whichTrace, traceEvents, dimemasLabels );
+  return verifyEventLabels( whichTrace, traceEvents, dimemasLabels );
 }
 
 
@@ -121,7 +122,7 @@ bool verifyFolding( const Trace& whichTrace )
   constexpr size_t FOLDING_LABELS_SIZE = 1;
   const std::array< std::string, FOLDING_LABELS_SIZE > foldingLabels { "Sampled functions" };
 
-  return verifyEventLabels< FOLDING_LABELS_SIZE >( whichTrace, traceEvents, foldingLabels );
+  return verifyEventLabels( whichTrace, traceEvents, foldingLabels );
 }
 
 
