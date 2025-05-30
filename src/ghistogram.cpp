@@ -1875,6 +1875,11 @@ void gHistogram::OnPopUpSaveImageDialog( wxCommandEvent& event )
   saveImageDialog();
 }
 
+void gHistogram::OnPopUpSaveToClipboard( wxCommandEvent& event )
+{
+  saveToClipboard();
+}
+
 
 void gHistogram::OnPopUpSavePlaneAsText( wxCommandEvent& event )
 {
@@ -3149,40 +3154,8 @@ void gHistogram::saveImageDialog( wxString whichFileName )
 }
 
 
-void gHistogram::saveImage( wxString whichFileName, TImageFormat filterIndex )
-{
-  wxString imagePath;
-  //TImageFormat filterIndex;
-
-  setEnableDestroyButton( false );
-
-  if( !whichFileName.IsEmpty() )
-  {
-    imagePath = whichFileName;
-    //filterIndex =  TImageFormat::PNG;
-  }
-  else
-  {
-    wxString imageName;
-    wxString tmpSuffix;
-    wxString defaultDir;
-
-    imageName = buildFormattedFileName();
-
-  #ifdef _WIN32
-    defaultDir = _(".\\");
-  #else
-    defaultDir = _("./");
-  #endif
-    filterIndex = ParaverConfig::getInstance()->getHistogramSaveImageFormat();
-
-    tmpSuffix = _(".") +
-            wxString::FromUTF8( LabelConstructor::getImageFileSuffix( filterIndex ).c_str() );
-    imagePath = imageName + tmpSuffix;
-  }
-  
+wxBitmap gHistogram::getBitmapForImage(){    
   // Build image to be saved as: title image + timeline image
-
   // Get title
   wxString longTitle = wxString::FromUTF8(
           ( myHistogram->getName() + " @ " +
@@ -3277,6 +3250,45 @@ void gHistogram::saveImage( wxString whichFileName, TImageFormat filterIndex )
     gridHisto->Render( imageDC, wxPoint( xdst, titleHeight ) );
   }
 
+  return imageBitmap;
+
+}
+
+void gHistogram::saveImage( wxString whichFileName, TImageFormat filterIndex )
+{
+  wxString imagePath;
+  //TImageFormat filterIndex;
+
+  setEnableDestroyButton( false );
+
+  if( !whichFileName.IsEmpty() )
+  {
+    imagePath = whichFileName;
+    //filterIndex =  TImageFormat::PNG;
+  }
+  else
+  {
+    wxString imageName;
+    wxString tmpSuffix;
+    wxString defaultDir;
+
+    imageName = buildFormattedFileName();
+
+  #ifdef _WIN32
+    defaultDir = _(".\\");
+  #else
+    defaultDir = _("./");
+  #endif
+    filterIndex = ParaverConfig::getInstance()->getHistogramSaveImageFormat();
+
+    tmpSuffix = _(".") +
+            wxString::FromUTF8( LabelConstructor::getImageFileSuffix( filterIndex ).c_str() );
+    imagePath = imageName + tmpSuffix;
+  }
+
+
+  wxBitmap imageBitmap = this->getBitmapForImage();
+
   // Get extension and save
   wxBitmapType imageType;
   switch( filterIndex )
@@ -3301,6 +3313,24 @@ void gHistogram::saveImage( wxString whichFileName, TImageFormat filterIndex )
   wxImage baseLayer = imageBitmap.ConvertToImage();
   baseLayer.SaveFile( imagePath, imageType );
 
+  setEnableDestroyButton( true );
+}
+
+void gHistogram::saveToClipboard(){
+
+  setEnableDestroyButton( false );
+  wxBitmap bitmap = this->getBitmapForImage();
+
+  if (wxTheClipboard->Open())
+  {
+    // This data objects are held by the clipboard,
+    // so do not delete them in the app.
+    if(!wxTheClipboard->SetData( new wxBitmapDataObject(bitmap) )){
+      std::cout<< "Could not copy to clipboard" <<std::endl;        
+    }
+    wxTheClipboard->Close();
+  }
+ 
   setEnableDestroyButton( true );
 }
 

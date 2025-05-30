@@ -148,6 +148,8 @@
 #define ID_MENU_SAVE_TO_CLIPBOARD_WO_LEGEND                30112
 #define ID_MENU_SAVE_TO_CLIPBOARD_LEGEND                   30113
 
+#define ID_HIST_SAVE_TO_CLIPBOARD                          30114
+
 #define ID_MENU_SYNC_GROUP_BASE                            31000
 #define ID_MENU_SYNC_REMOVE_GROUP_BASE                     32000
 

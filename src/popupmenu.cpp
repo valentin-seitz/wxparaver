@@ -1038,8 +1038,15 @@ gPopUpMenu<gHistogram>::gPopUpMenu( gHistogram *whichHistogram )
 
   AppendSeparator();
 
+  AppendSubMenu( popUpMenuCopy, _( "Copy to Clipboard" ) );
+  buildItem( popUpMenuCopy, _( "Histogram as Image" ), wxITEM_NORMAL, &gHistogram::OnPopUpSaveToClipboard, ID_HIST_SAVE_TO_CLIPBOARD );
+
+  AppendSeparator();
+
   buildItem( popUpMenuSave, _( "Configuration..." ), wxITEM_NORMAL, &gHistogram::OnPopUpSaveCFG, ID_MENU_SAVE_HISTOGRAM_AS_CFG );
   buildItem( popUpMenuSave, _( "Image..." ), wxITEM_NORMAL, &gHistogram::OnPopUpSaveImageDialog, ID_MENU_SAVE_IMAGE );
+
+
 
   if ( window->GetHistogram()->getThreeDimensions() )
   {
