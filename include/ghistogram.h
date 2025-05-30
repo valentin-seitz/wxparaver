@@ -415,11 +415,15 @@ public:
   
   void OnPopUpSaveCFG( wxCommandEvent& event );
   void OnPopUpSaveImageDialog( wxCommandEvent& event );
+
+  void OnPopUpSaveToClipboard( wxCommandEvent& event );
   
   void OnMenuGradientFunction( TGradientFunction function );
   
   void saveCFG();
   void saveImageDialog( wxString whichFileName = _( "" ) );
+  wxBitmap getBitmapForImage();
+  void saveToClipboard();
   void saveImage( wxString whichFileName = _( "" ), TImageFormat filterIndex =  TImageFormat::PNG );
   void saveText( bool onlySelectedPlane = false );
 
